@@ -16,3 +16,4 @@ __pycache__/
 **/.hypothesis/
 .coverage
 CLAUDE.md
+.worktrees/
