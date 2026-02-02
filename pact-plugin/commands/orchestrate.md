@@ -292,15 +292,13 @@ After PREPARE completes (or is skipped with plan context), evaluate whether the 
 
 When detection fires (score >= threshold), follow the evaluation response protocol in [pact-scope-detection.md](../protocols/pact-scope-detection.md) — S5 confirmation flow, user response mapping, and autonomous tier.
 
-**On confirmed decomposition**: Generate a scope contract for each sub-scope before invoking rePACT. See [pact-scope-contract.md](../protocols/pact-scope-contract.md) for the contract format and generation process.
+**On confirmed decomposition**: Generate a scope contract for each sub-scope before invoking rePACT. See [pact-scope-contract.md](../protocols/pact-scope-contract.md) for the contract format and generation process. Skip top-level ARCHITECT — scope contracts define cross-scope interfaces, and each sub-scope runs its own mini-ARCHITECT via rePACT.
 
 ---
 
 ### Phase 2: ARCHITECT → `pact-architect`
 
 **Skip criteria met (including completeness check, after re-assessment)?** → Proceed to Phase 3.
-
-**Decomposition skip**: When scope detection triggers decomposition, skip top-level ARCHITECT — scope contracts define cross-scope interfaces, and each sub-scope runs its own mini-ARCHITECT via rePACT.
 
 **Plan sections to pass** (if plan exists):
 - "Architecture Phase"
