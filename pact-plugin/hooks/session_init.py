@@ -9,7 +9,8 @@ Performs:
 2. Detects active plans and notifies user
 3. Updates ~/.claude/CLAUDE.md (merges/installs PACT Orchestrator)
 4. Ensures project CLAUDE.md exists with memory sections
-5. Checks for in_progress Tasks (resumption context via Task integration)
+5. Checks for stale pinned context (delegated to staleness.py)
+6. Checks for in_progress Tasks (resumption context via Task integration)
 
 Note: Memory-related initialization (dependency installation, embedding
 migration, pending embedding catch-up) is now lazy-loaded on first memory
@@ -33,6 +34,31 @@ if str(_hooks_dir) not in sys.path:
 
 # Import shared Task utilities (DRY - used by multiple hooks)
 from shared.task_utils import get_task_list
+
+# Import staleness detection (extracted to staleness.py for maintainability).
+# Public names are get_project_claude_md_path / estimate_tokens in staleness.py.
+# Re-exported here with underscore aliases so existing consumers and tests
+# that patch "session_init._get_project_claude_md_path" continue to work.
+from staleness import (  # noqa: F401
+    check_pinned_staleness as _staleness_check,
+    PINNED_STALENESS_DAYS,
+    PINNED_CONTEXT_TOKEN_BUDGET,
+    get_project_claude_md_path,
+    estimate_tokens,
+    _get_project_claude_md_path,
+    _estimate_tokens,
+)
+
+
+def check_pinned_staleness():
+    """
+    Thin wrapper around staleness.check_pinned_staleness().
+
+    Resolves the CLAUDE.md path via the module-level _get_project_claude_md_path
+    (which tests can patch on session_init) and passes it to the core function.
+    """
+    path = _get_project_claude_md_path()
+    return _staleness_check(claude_md_path=path)
 
 
 def setup_plugin_symlinks() -> str | None:
@@ -353,7 +379,8 @@ def main():
     2. Checks for active plans
     3. Updates ~/.claude/CLAUDE.md (merges/installs PACT Orchestrator)
     4. Ensures project CLAUDE.md exists with memory sections
-    5. Checks for in_progress Tasks (resumption context via Task integration)
+    5. Checks for stale pinned context entries in project CLAUDE.md
+    6. Checks for in_progress Tasks (resumption context via Task integration)
 
     Memory initialization (dependencies, migrations, embedding catch-up) is
     now lazy-loaded on first memory operation to reduce startup cost for
@@ -400,7 +427,15 @@ def main():
             else:
                 context_parts.append(project_md_msg)
 
-        # 5. Check for in_progress Tasks (resumption context via Task integration)
+        # 5. Check for stale pinned context
+        staleness_msg = check_pinned_staleness()
+        if staleness_msg:
+            if "failed" in staleness_msg.lower():
+                system_messages.append(staleness_msg)
+            else:
+                context_parts.append(staleness_msg)
+
+        # 6. Check for in_progress Tasks (resumption context via Task integration)
         tasks = get_task_list()
         if tasks:
             resumption_msg = check_resumption_context(tasks)
