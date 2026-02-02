@@ -24,7 +24,6 @@ Counter-signals argue against decomposition. Each counter-signal present reduces
 |----------------|-----------|
 | **Shared data models across domains** | Sub-scopes would need constant coordination on shared types — single scope is simpler |
 | **Small total scope despite multiple domains** | A one-line API change + one-line frontend change does not warrant sub-scope overhead |
-| **User explicitly invoked comPACT** | User is signaling lightweight handling — respect the intent |
 
 ### Scoring Model
 
@@ -38,6 +37,14 @@ Score = sum(detected heuristic points) - count(counter-signals present)
 - **Decomposition threshold**: Score >= 3
 
 The threshold and point values are tunable. Adjust based on observed false-positive and false-negative rates during canary workflows.
+
+### Scoring Examples
+
+| Scenario | Signals | Counter-Signals | Score | Result |
+|----------|---------|-----------------|-------|--------|
+| Backend + frontend task | Multiple distinct domains (2) + High specialist count (1) | — | 3 | Threshold met — propose decomposition |
+| Backend + frontend + DB migration, no shared models | Multiple distinct domains (2) + Independent file clusters (2) + High specialist count (1) | — | 5 | All strong signals fire — autonomous tier eligible |
+| API change + UI tweak, shared types | Multiple distinct domains (2) | Small total scope (-1) + Shared data models (-1) | 0 | Below threshold — single scope |
 
 ### Activation Tiers
 
