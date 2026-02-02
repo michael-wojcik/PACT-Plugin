@@ -1144,7 +1144,8 @@ Counter-signals are **confidence demoters** (reduce confidence by one level), no
 |---|----------------|--------|
 | C1 | Shared data models or types across domains | Demotes confidence by one level |
 | C2 | Small total scope despite multiple domains | Demotes confidence by one level (strongest counter-signal) |
-| C3 | User explicitly invoked comPACT | Bypass detection entirely (flow concern, not scoring) |
+
+> **Flow Override**: C3 — User explicitly invoked comPACT → Bypass detection entirely. This is a flow control mechanism, not a confidence demoter.
 
 ### Confidence Matrix
 
@@ -1160,7 +1161,7 @@ Confidence is derived from signal combinations, then adjusted by counter-signals
 | 2+ | 1+ | 0 | High | Auto-decompose if Autonomous enabled; else Confirmed |
 | 2+ | any | 1+ | Medium | Propose decomposition (Confirmed tier) |
 
-Each counter-signal demotes the base confidence by one level (High → Medium → Low → no action). Multiple counter-signals stack.
+Each counter-signal type independently demotes confidence by one level (High → Medium → Low → no action). Counter-signals do not stack — the confidence matrix is the authoritative lookup for all combinations.
 
 ### Detection Output Contract
 
