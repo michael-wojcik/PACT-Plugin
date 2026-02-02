@@ -155,20 +155,26 @@ class TestApplyTokenBudget:
         """When over budget, older entries should be compressed (newest stays full)."""
         from working_memory import _apply_token_budget
 
-        long_text = "word " * 100  # ~130 tokens
+        long_text = "word " * 100  # ~130 tokens per entry
         entries = [
             f"### 2026-01-15 10:00\n**Context**: {long_text}",
             f"### 2026-01-14 10:00\n**Context**: {long_text}\n**Goal**: Some goal\n**Decisions**: Something",
             f"### 2026-01-13 10:00\n**Context**: {long_text}\n**Goal**: Another goal",
         ]
 
-        result = _apply_token_budget(entries, 200)
+        # Budget of 250 is enough for the first entry (~130 tokens) plus
+        # compressed older entries (~4 tokens each), guaranteeing at least 2
+        # entries survive.
+        result = _apply_token_budget(entries, 250)
 
+        # At least 2 entries must survive (newest full + compressed older)
+        assert len(result) >= 2, f"Expected at least 2 entries, got {len(result)}"
         # First entry should be unchanged (newest)
         assert result[0] == entries[0]
-        # Older entries should be compressed
-        if len(result) > 1:
-            assert "**Summary**" in result[1] or len(result[1]) < len(entries[1])
+        # Older entries must be compressed -- the compression marker is "**Summary**"
+        assert "**Summary**" in result[1], (
+            f"Expected compressed entry to contain '**Summary**', got: {result[1][:200]}"
+        )
 
     def test_way_over_budget_drops_entries(self):
         """When compressed entries still exceed budget, should drop from end."""

@@ -318,3 +318,107 @@ class TestSessionInitEstimateTokens:
 
         text = "one two three four five six seven eight nine ten"
         assert session_est(text) == 13
+
+
+class TestBudgetWarningIdempotency:
+    """Tests that budget warning is not duplicated on repeated runs."""
+
+    def _create_project_claude_md(self, tmp_path, content):
+        """Helper to create a project CLAUDE.md and patch path resolution."""
+        claude_md = tmp_path / "CLAUDE.md"
+        claude_md.write_text(content, encoding="utf-8")
+        return claude_md
+
+    def test_budget_warning_not_duplicated_on_second_run(self, tmp_path):
+        """Running check_pinned_staleness twice on over-budget content should
+        produce exactly one <!-- WARNING: comment, not two."""
+        from session_init import check_pinned_staleness
+
+        big_content = "word " * 1500  # Exceeds 1200 token budget
+
+        claude_md = self._create_project_claude_md(tmp_path, (
+            "# Project Memory\n\n"
+            "## Pinned Context\n\n"
+            f"### Big Feature\n{big_content}\n\n"
+        ))
+
+        with patch("session_init._get_project_claude_md_path", return_value=claude_md):
+            # First run -- should add the warning
+            result1 = check_pinned_staleness()
+            assert result1 is not None
+            assert "budget" in result1.lower()
+
+            # Second run -- should NOT add a second warning
+            result2 = check_pinned_staleness()
+
+        content_after = claude_md.read_text(encoding="utf-8")
+        warning_count = content_after.count("<!-- WARNING: Pinned context")
+        assert warning_count == 1, (
+            f"Expected exactly 1 budget warning comment, found {warning_count}"
+        )
+
+
+class TestStalenessModuleDirect:
+    """Tests for staleness.py called directly (not via session_init wrapper)."""
+
+    def _create_claude_md(self, tmp_path, content):
+        claude_md = tmp_path / "CLAUDE.md"
+        claude_md.write_text(content, encoding="utf-8")
+        return claude_md
+
+    def test_explicit_path_parameter(self, tmp_path):
+        """check_pinned_staleness(claude_md_path=...) should use the given path
+        without calling _get_project_claude_md_path."""
+        from staleness import check_pinned_staleness, PINNED_STALENESS_DAYS
+
+        old_date = (datetime.now() - timedelta(days=PINNED_STALENESS_DAYS + 10)).strftime("%Y-%m-%d")
+
+        claude_md = self._create_claude_md(tmp_path, (
+            "# Project Memory\n\n"
+            "## Pinned Context\n\n"
+            f"### Old Feature (PR #50, merged {old_date})\n"
+            "- Details\n\n"
+        ))
+
+        # Call with explicit path -- should NOT need _get_project_claude_md_path
+        with patch("staleness._get_project_claude_md_path") as mock_get:
+            result = check_pinned_staleness(claude_md_path=claude_md)
+
+        # The path resolver should never have been called
+        mock_get.assert_not_called()
+        # But the stale entry should still be detected
+        assert result is not None
+        assert "stale" in result.lower()
+
+        content = claude_md.read_text(encoding="utf-8")
+        assert "<!-- STALE:" in content
+
+    def test_entry_with_no_newline_after_heading_skipped(self, tmp_path):
+        """An entry whose heading has no trailing newline (single-line entry)
+        should be skipped gracefully by the .find('\n') guard."""
+        from staleness import check_pinned_staleness, PINNED_STALENESS_DAYS
+
+        old_date = (datetime.now() - timedelta(days=PINNED_STALENESS_DAYS + 10)).strftime("%Y-%m-%d")
+
+        # Construct pinned content where the LAST entry has no trailing newline.
+        # This means entry_text.find("\n") returns -1 and the code should skip it.
+        claude_md = self._create_claude_md(tmp_path, (
+            "# Project Memory\n\n"
+            "## Pinned Context\n\n"
+            f"### Heading-only entry (PR #80, merged {old_date})"
+        ))
+
+        result = check_pinned_staleness(claude_md_path=claude_md)
+
+        # The entry should be skipped (no stale marker added) because there is
+        # no newline after the heading to insert the marker after.
+        content = claude_md.read_text(encoding="utf-8")
+        assert "<!-- STALE:" not in content
+
+    def test_nonexistent_explicit_path_returns_none(self, tmp_path):
+        """Passing a path to a non-existent file should return None gracefully."""
+        from staleness import check_pinned_staleness
+
+        missing = tmp_path / "does_not_exist.md"
+        result = check_pinned_staleness(claude_md_path=missing)
+        assert result is None
