@@ -153,6 +153,42 @@ verify_patterns "rePACT.md" "Scope metadata convention" \
     "metadata"
 echo ""
 
+# --- Phase numbering sequence ---
+echo "Phase numbering sequence (orchestrate.md):"
+
+# Helper: check that orchestrate.md contains a pattern (reuse check_pattern logic inline)
+check_pattern_file() {
+    local file="$1"
+    local name="$2"
+    local pattern="$3"
+
+    if [ ! -f "$file" ]; then
+        echo "  ✗ $name: FILE NOT FOUND ($file)"
+        FAIL=$((FAIL + 1))
+        return 1
+    fi
+
+    if grep -q "$pattern" "$file"; then
+        echo "  ✓ $name"
+        PASS=$((PASS + 1))
+        return 0
+    else
+        echo "  ✗ $name: pattern not found"
+        FAIL=$((FAIL + 1))
+        return 1
+    fi
+}
+
+# Standard phases
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 1: PREPARE exists" "Phase 1: PREPARE"
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 2: ARCHITECT exists" "Phase 2: ARCHITECT"
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 3: CODE exists" "Phase 3: CODE"
+# Scoped phases
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 4: ATOMIZE exists" "Phase 4: ATOMIZE"
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 5: CONSOLIDATE exists" "Phase 5: CONSOLIDATE"
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 6: TEST exists" "Phase 6: TEST"
+echo ""
+
 echo "Scope-aware conventions (pact-protocols.md SSOT):"
 PROTOCOLS_FILE="pact-plugin/protocols/pact-protocols.md"
 if [ -f "$PROTOCOLS_FILE" ]; then

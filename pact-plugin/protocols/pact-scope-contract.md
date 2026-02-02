@@ -14,7 +14,7 @@ Scope Contract: {scope-name}
 Identity:
   scope_id: {kebab-case identifier, e.g., "backend-api"}
   parent_scope: {parent scope_id or "root"}
-  executor: rePACT
+  executor: {assigned at dispatch — currently rePACT}
 
 Deliverables:
   - {Expected file paths or patterns this scope produces}

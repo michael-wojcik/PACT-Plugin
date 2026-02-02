@@ -34,7 +34,7 @@ verify() {
 
     # Extract SSOT content using sed ranges to a temp file
     local tmpfile=$(mktemp)
-    trap "rm -f $tmpfile" RETURN
+    trap 'rm -f "$tmpfile"' RETURN
 
     for range in $ranges; do
         sed -n "${range}p" "$SOURCE" >> "$tmpfile"

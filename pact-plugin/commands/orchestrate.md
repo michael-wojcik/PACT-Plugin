@@ -27,7 +27,7 @@ Create the full Task hierarchy upfront for workflow visibility:
 **Scoped PACT phases**: When decomposition fires after PREPARE, the standard ARCHITECT and CODE phases are skipped (`decomposition_active`) and replaced by scoped phases. Create retroactively (detection occurs after PREPARE):
 - `"ATOMIZE: {feature-slug}"` with `blockedBy = [PREPARE task ID]`
 - `"CONSOLIDATE: {feature-slug}"` with `blockedBy = [all scope task IDs]`
-- Update TEST to `blockedBy = [CONSOLIDATE task ID]`
+- Add CONSOLIDATE to TEST's `blockedBy` via `addBlockedBy = [CONSOLIDATE task ID]` (the original CODE dependency auto-resolves when CODE is marked completed/skipped)
 
 The scoped flow is: **P**repare → **A**tomize → **C**onsolidate → **T**est (same PACT acronym, scoped meanings).
 
@@ -436,7 +436,7 @@ If a sub-task emerges that is too complex for a single specialist invocation:
 
 This phase dispatches sub-scopes for independent execution. Each sub-scope runs a full PACT cycle (Prepare → Architect → Code → Test) via rePACT.
 
-**Dispatch**: Invoke `/PACT:rePACT` for each sub-scope with its scope contract. Sub-scopes run concurrently (default) unless they share files.
+**Dispatch**: Invoke `/PACT:rePACT` for each sub-scope with its scope contract. Sub-scopes run concurrently (default) unless they share files. When generating scope contracts, ensure `shared_files` constraints are set per the generation process in [pact-scope-contract.md](../protocols/pact-scope-contract.md) -- sibling scopes must not modify each other's owned files.
 
 **Sub-scope failure policy**: Sub-scope failure is isolated — sibling scopes continue independently. Individual scope failures route through `/PACT:imPACT` to the affected scope only. However, when a sub-scope emits HALT, the parent orchestrator stops ALL sub-scopes (consistent with algedonic protocol: "Stop ALL agents"). Preserve work-in-progress for all scopes. After HALT resolution, review interrupted scopes before resuming.
 

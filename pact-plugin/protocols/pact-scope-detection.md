@@ -77,7 +77,7 @@ When autonomous mode is not enabled, all detection-triggered decomposition uses 
 
 - **comPACT** bypasses scope detection entirely — it is inherently single-domain
 - **Manual `/rePACT`** bypasses detection — user has already decided to decompose
-- **Ongoing sub-scope execution** does not re-evaluate detection (no recursive detection within sub-scopes)
+- **Ongoing sub-scope execution** does not re-evaluate detection (no recursive detection within sub-scopes). Scoped sub-scopes cannot themselves trigger scope detection -- recursive detection is prevented by the 2-level nesting limit (see S1 Autonomy & Recursion constraints) and this bypass rule.
 
 ### Evaluation Response
 
@@ -109,9 +109,9 @@ Recommendation: [A or B with brief rationale]
 
 | Response | Action |
 |----------|--------|
-| Confirmed (A) | Generate scope contracts (see [pact-scope-contract.md](pact-scope-contract.md)), then invoke `/PACT:rePACT` for each sub-scope |
+| Confirmed (A) | Generate scope contracts (see [pact-scope-contract.md](pact-scope-contract.md)), then proceed to ATOMIZE phase (Phase 4), which dispatches `/PACT:rePACT` for each sub-scope |
 | Rejected (B) | Continue single scope (today's behavior) |
-| Adjusted (C) | Generate scope contracts with user's modified boundaries, then invoke `/PACT:rePACT` |
+| Adjusted (C) | Generate scope contracts with user's modified boundaries, then proceed to ATOMIZE phase (Phase 4), which dispatches `/PACT:rePACT` for each sub-scope |
 
 #### Autonomous Tier
 

@@ -176,9 +176,41 @@ check_pattern "$COMMANDS_DIR/orchestrate.md" \
     "imPACT"
 echo ""
 
-# --- 8. Scoped phase task hierarchy ---
+# --- 8. ATOMIZE behavioral checks ---
+# ATOMIZE phase must dispatch sub-scopes via rePACT.
+echo "8. ATOMIZE behavioral checks:"
+check_pattern "$COMMANDS_DIR/orchestrate.md" \
+    "ATOMIZE dispatches via rePACT" \
+    "rePACT"
+echo ""
+
+# --- 9. decomposition_active skip reason ---
+echo "9. decomposition_active skip reason:"
+check_pattern "$COMMANDS_DIR/orchestrate.md" \
+    "decomposition_active skip reason documented" \
+    "decomposition_active"
+echo ""
+
+# --- 10. Executor interface bidirectional cross-references ---
+echo "10. Executor interface cross-references:"
+check_pattern "$PROTOCOLS_DIR/pact-scope-contract.md" \
+    "Scope contract references rePACT command" \
+    "rePACT.md"
+check_pattern "$COMMANDS_DIR/rePACT.md" \
+    "rePACT references scope contract protocol" \
+    "pact-scope-contract.md"
+echo ""
+
+# --- 11. Detection bypass within sub-scopes ---
+echo "11. Detection bypass within sub-scopes:"
+check_pattern "$PROTOCOLS_DIR/pact-scope-detection.md" \
+    "Detection bypass within sub-scopes documented" \
+    "does not re-evaluate detection"
+echo ""
+
+# --- 12. Scoped phase task hierarchy ---
 # The task hierarchy in orchestrate.md must include ATOMIZE and CONSOLIDATE phase tasks.
-echo "8. Scoped phase task hierarchy:"
+echo "12. Scoped phase task hierarchy:"
 task_hierarchy_orchestrate=$(sed -n '/^## Task Hierarchy/,/^## /p' "$COMMANDS_DIR/orchestrate.md" | sed '$d')
 if echo "$task_hierarchy_orchestrate" | grep -q "ATOMIZE"; then
     echo "  ✓ orchestrate.md task hierarchy includes ATOMIZE phase"
