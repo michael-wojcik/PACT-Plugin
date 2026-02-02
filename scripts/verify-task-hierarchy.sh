@@ -143,6 +143,54 @@ verify_patterns "imPACT.md" "Phase re-entry lifecycle" \
     "completed"
 echo ""
 
+# --- Scope-Aware Task Conventions ---
+echo "Scope-aware conventions (rePACT.md):"
+verify_patterns "rePACT.md" "Scope naming prefix" \
+    "\[scope:" \
+    "scope_id"
+verify_patterns "rePACT.md" "Scope metadata convention" \
+    "scope_id" \
+    "metadata"
+echo ""
+
+echo "Scope-aware conventions (pact-protocols.md SSOT):"
+PROTOCOLS_FILE="pact-plugin/protocols/pact-protocols.md"
+if [ -f "$PROTOCOLS_FILE" ]; then
+    # Check that the task hierarchy section in SSOT contains scope conventions
+    section=$(sed -n '/^## Task Hierarchy/,/^## /p' "$PROTOCOLS_FILE" | sed '$d')
+
+    # Check 1: Scope naming convention documented
+    if echo "$section" | grep -q "\[scope:{scope_id}\]"; then
+        echo "  ✓ SSOT scope naming convention: pattern present"
+        PASS=$((PASS + 1))
+    else
+        echo "  ✗ SSOT scope naming convention: [scope:{scope_id}] pattern missing"
+        FAIL=$((FAIL + 1))
+    fi
+
+    # Check 2: Scope metadata documented
+    if echo "$section" | grep -q '"scope_id"'; then
+        echo "  ✓ SSOT scope metadata: scope_id field present"
+        PASS=$((PASS + 1))
+    else
+        echo "  ✗ SSOT scope metadata: scope_id field missing in metadata example"
+        FAIL=$((FAIL + 1))
+    fi
+
+    # Check 3: Scoped hierarchy diagram present
+    if echo "$section" | grep -q "Integration Phase Task"; then
+        echo "  ✓ SSOT scoped hierarchy: Integration Phase Task in diagram"
+        PASS=$((PASS + 1))
+    else
+        echo "  ✗ SSOT scoped hierarchy: Integration Phase Task not found in hierarchy diagram"
+        FAIL=$((FAIL + 1))
+    fi
+else
+    echo "  ✗ SSOT file not found: $PROTOCOLS_FILE"
+    FAIL=$((FAIL + 3))
+fi
+echo ""
+
 # --- Summary ---
 echo "=== Summary ==="
 echo "Passed: $PASS"
