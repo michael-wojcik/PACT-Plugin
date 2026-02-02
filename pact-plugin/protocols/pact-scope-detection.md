@@ -37,6 +37,8 @@ Score = sum(detected heuristic points) - count(counter-signals present)
 
 The threshold and point values are tunable. Adjust based on observed false-positive and false-negative rates during canary workflows.
 
+**Single sub-scope guard**: If detection fires but only identifies 1 sub-scope, fall back to single scope. Decomposition with 1 scope adds overhead with no benefit.
+
 ### Scoring Examples
 
 | Scenario | Signals | Counter-Signals | Score | Result |
@@ -107,7 +109,7 @@ Recommendation: [A or B with brief rationale]
 
 | Response | Action |
 |----------|--------|
-| Confirmed (A) | Generate scope contracts (see Scope Contract below), then invoke `/PACT:rePACT` for each sub-scope |
+| Confirmed (A) | Generate scope contracts (see [pact-scope-contract.md](pact-scope-contract.md)), then invoke `/PACT:rePACT` for each sub-scope |
 | Rejected (B) | Continue single scope (today's behavior) |
 | Adjusted (C) | Generate scope contracts with user's modified boundaries, then invoke `/PACT:rePACT` |
 
@@ -125,6 +127,6 @@ When **all** of the following conditions are true, skip user confirmation and pr
 
 ### Post-Detection: Scope Contract Generation
 
-When decomposition is confirmed (by user or autonomous tier), the orchestrator generates a scope contract for each identified sub-scope before invoking rePACT. See the [Scope Contract](#scope-contract) section for the contract format and generation process.
+When decomposition is confirmed (by user or autonomous tier), the orchestrator generates a scope contract for each identified sub-scope before invoking rePACT. See [pact-scope-contract.md](pact-scope-contract.md) for the contract format and generation process.
 
 ---

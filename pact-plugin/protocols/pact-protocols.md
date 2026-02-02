@@ -1204,6 +1204,8 @@ Score = sum(detected heuristic points) - count(counter-signals present)
 
 The threshold and point values are tunable. Adjust based on observed false-positive and false-negative rates during canary workflows.
 
+**Single sub-scope guard**: If detection fires but only identifies 1 sub-scope, fall back to single scope. Decomposition with 1 scope adds overhead with no benefit.
+
 ### Scoring Examples
 
 | Scenario | Signals | Counter-Signals | Score | Result |
@@ -1274,7 +1276,7 @@ Recommendation: [A or B with brief rationale]
 
 | Response | Action |
 |----------|--------|
-| Confirmed (A) | Generate scope contracts (see Scope Contract below), then invoke `/PACT:rePACT` for each sub-scope |
+| Confirmed (A) | Generate scope contracts (see [pact-scope-contract.md](pact-scope-contract.md)), then invoke `/PACT:rePACT` for each sub-scope |
 | Rejected (B) | Continue single scope (today's behavior) |
 | Adjusted (C) | Generate scope contracts with user's modified boundaries, then invoke `/PACT:rePACT` |
 
@@ -1292,7 +1294,7 @@ When **all** of the following conditions are true, skip user confirmation and pr
 
 ### Post-Detection: Scope Contract Generation
 
-When decomposition is confirmed (by user or autonomous tier), the orchestrator generates a scope contract for each identified sub-scope before invoking rePACT. See the [Scope Contract](#scope-contract) section for the contract format and generation process.
+When decomposition is confirmed (by user or autonomous tier), the orchestrator generates a scope contract for each identified sub-scope before invoking rePACT. See [pact-scope-contract.md](pact-scope-contract.md) for the contract format and generation process.
 
 ---
 
@@ -1342,7 +1344,7 @@ Constraints:
    a. Assign `scope_id` from domain keywords (e.g., "backend-api", "frontend-ui", "database-migration")
    b. List expected deliverables from PREPARE output file references
    c. Identify interface exports/imports by analyzing cross-scope references in PREPARE output
-   d. Set shared file constraints by comparing file lists across scopes (overlapping files go to constraints)
+   d. Set shared file constraints by comparing file lists across scopes — when a file appears in multiple scopes' deliverables, assign ownership to one scope (typically the scope with the most significant changes to that file); other scopes list it in `shared_files` (no-modify). The owning scope may modify the file; others must coordinate via the integration phase.
    e. Propagate parent conventions (from plan or ARCHITECT output if available)
 3. Present contracts in the rePACT invocation prompt for each sub-scope
 
@@ -1388,7 +1390,7 @@ Input:
 Output:
   handoff: {standard 5-item handoff + contract fulfillment section}
   commits: {code committed to branch}
-  status: completed | blocked | stalled
+  status: completed  # Non-happy-path uses completed with metadata (e.g., {"stalled": true} or {"blocked": true}) per task lifecycle conventions
 ```
 
 #### Current Executor: rePACT
@@ -1403,7 +1405,7 @@ rePACT implements the executor interface as follows:
 | **Input: nesting_depth** | Tracked via orchestrator context; enforced at 2-level maximum |
 | **Output: handoff** | Standard 5-item handoff with Contract Fulfillment section appended (see rePACT After Completion) |
 | **Output: commits** | Code committed directly to the feature branch during Mini-Code phase |
-| **Output: status** | Reported via task metadata (`completed`, or `blocked`/`stalled` with reason) |
+| **Output: status** | Always `completed`; non-happy-path uses metadata (`{"stalled": true, "reason": "..."}` or `{"blocked": true, "blocker_task": "..."}`) per task lifecycle conventions |
 | **Delivery mechanism** | Synchronous — agent completes and returns handoff text directly to orchestrator |
 
 See [rePACT.md](../commands/rePACT.md) for the full command documentation, including scope contract reception and contract-aware handoff format.

@@ -44,7 +44,7 @@ Constraints:
    a. Assign `scope_id` from domain keywords (e.g., "backend-api", "frontend-ui", "database-migration")
    b. List expected deliverables from PREPARE output file references
    c. Identify interface exports/imports by analyzing cross-scope references in PREPARE output
-   d. Set shared file constraints by comparing file lists across scopes (overlapping files go to constraints)
+   d. Set shared file constraints by comparing file lists across scopes — when a file appears in multiple scopes' deliverables, assign ownership to one scope (typically the scope with the most significant changes to that file); other scopes list it in `shared_files` (no-modify). The owning scope may modify the file; others must coordinate via the integration phase.
    e. Propagate parent conventions (from plan or ARCHITECT output if available)
 3. Present contracts in the rePACT invocation prompt for each sub-scope
 
@@ -90,7 +90,7 @@ Input:
 Output:
   handoff: {standard 5-item handoff + contract fulfillment section}
   commits: {code committed to branch}
-  status: completed | blocked | stalled
+  status: completed  # Non-happy-path uses completed with metadata (e.g., {"stalled": true} or {"blocked": true}) per task lifecycle conventions
 ```
 
 #### Current Executor: rePACT
@@ -105,7 +105,7 @@ rePACT implements the executor interface as follows:
 | **Input: nesting_depth** | Tracked via orchestrator context; enforced at 2-level maximum |
 | **Output: handoff** | Standard 5-item handoff with Contract Fulfillment section appended (see rePACT After Completion) |
 | **Output: commits** | Code committed directly to the feature branch during Mini-Code phase |
-| **Output: status** | Reported via task metadata (`completed`, or `blocked`/`stalled` with reason) |
+| **Output: status** | Always `completed`; non-happy-path uses metadata (`{"stalled": true, "reason": "..."}` or `{"blocked": true, "blocker_task": "..."}`) per task lifecycle conventions |
 | **Delivery mechanism** | Synchronous — agent completes and returns handoff text directly to orchestrator |
 
 See [rePACT.md](../commands/rePACT.md) for the full command documentation, including scope contract reception and contract-aware handoff format.

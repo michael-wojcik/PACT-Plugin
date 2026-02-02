@@ -16,15 +16,15 @@ Create the full Task hierarchy upfront for workflow visibility:
    - "PREPARE: {feature-slug}"
    - "ARCHITECT: {feature-slug}"
    - "CODE: {feature-slug}"
-   - "INTEGRATION: {feature-slug}" (only if decomposition occurred)
    - "TEST: {feature-slug}"
 3. TaskUpdate: Set phase-to-phase blockedBy chain:
    - ARCHITECT blockedBy PREPARE
    - CODE blockedBy ARCHITECT
-   - INTEGRATION blockedBy CODE (only if decomposition occurred)
-   - TEST blockedBy CODE (single scope) or INTEGRATION (multi-scope)
+   - TEST blockedBy CODE
 4. TaskUpdate: Feature task status = "in_progress"
 ```
+
+**INTEGRATION phase task**: Created retroactively after scope detection confirms decomposition (not upfront — detection occurs after PREPARE). When decomposition fires, create `"INTEGRATION: {feature-slug}"` with `blockedBy = [all scope task IDs]` and update TEST to `blockedBy = [INTEGRATION task ID]`.
 
 For each phase execution:
 ```
@@ -300,6 +300,8 @@ When detection fires (score >= threshold), follow the evaluation response protoc
 
 **Skip criteria met (including completeness check, after re-assessment)?** → Proceed to Phase 3.
 
+**Decomposition skip**: When scope detection triggers decomposition, skip top-level ARCHITECT — scope contracts define cross-scope interfaces, and each sub-scope runs its own mini-ARCHITECT via rePACT.
+
 **Plan sections to pass** (if plan exists):
 - "Architecture Phase"
 - "Key Decisions"
@@ -451,7 +453,9 @@ TaskUpdate: blockedBy = [all scope task IDs]
 - All sub-scope handoffs (contract fulfillment sections)
 - "This is cross-scope integration verification. Focus on compatibility between scopes, not internal scope correctness."
 
-**On failure**: Route through `/PACT:imPACT` for triage. Possible outcomes:
+**Sub-scope failure policy**: Sub-scope failure is isolated — sibling scopes continue independently. The integration phase catches incompatibilities. Individual scope failures route through `/PACT:imPACT` to the affected scope only. However, when a sub-scope emits HALT, the parent orchestrator stops ALL sub-scopes (consistent with algedonic protocol: "Stop ALL agents"). Preserve work-in-progress for all scopes. After HALT resolution, review interrupted scopes before resuming.
+
+**On integration failure**: Route through `/PACT:imPACT` for triage. Possible outcomes:
 - Interface mismatch → re-invoke affected scope's coder to fix
 - Contract deviation → architect reviews whether deviation is acceptable
 - Test failure → test engineer provides details, coder fixes

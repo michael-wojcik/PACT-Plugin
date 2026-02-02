@@ -68,8 +68,8 @@ verify "pact-phase-transitions.md" "Phase Transitions (lines 849-859 + 998-1075)
 verify "pact-documentation.md" "Documentation (lines 1076-1100)" "1076,1100"
 verify "pact-agent-stall.md" "Agent Stall Detection (lines 1101-1130)" "1101,1130"
 verify "pact-completeness.md" "Completeness Signals (lines 1132-1166)" "1132,1166"
-verify "pact-scope-detection.md" "Scope Detection (lines 1168-1297)" "1168,1297"
-verify "pact-scope-contract.md" "Scope Contract (lines 1299-1439)" "1299,1439"
+verify "pact-scope-detection.md" "Scope Detection (lines 1168-1299)" "1168,1299"
+verify "pact-scope-contract.md" "Scope Contract (lines 1301-1441)" "1301,1441"
 
 echo ""
 echo "=== Summary ==="

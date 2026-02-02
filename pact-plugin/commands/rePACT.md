@@ -232,7 +232,7 @@ When the parent orchestrator invokes rePACT with a **scope contract** (from scop
 
 **When a scope contract is provided:**
 
-1. **Identity**: Use the contract's `scope_id` as the scope identifier for all task naming and metadata (see Task Hierarchy below)
+1. **Identity**: Use the contract's `scope_id` as the scope identifier for all task naming and metadata (see Task Hierarchy above)
 2. **Deliverables**: Treat contracted deliverables as the success criteria for Mini-Code and Mini-Test
 3. **Interfaces**: Use `imports` to understand what sibling scopes provide; use `exports` to ensure this scope exposes what siblings expect
 4. **Shared files constraint**: Do NOT modify files listed in the contract's `shared_files` — these are owned by sibling scopes. Communicate this constraint to all dispatched specialists.
