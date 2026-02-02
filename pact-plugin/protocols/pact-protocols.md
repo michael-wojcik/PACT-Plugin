@@ -1197,6 +1197,134 @@ When autonomous mode is not enabled, all detection-triggered decomposition uses 
 - **Manual `/rePACT`** bypasses detection — user has already decided to decompose
 - **Ongoing sub-scope execution** does not re-evaluate detection (no recursive detection within sub-scopes)
 
+### Evaluation Response
+
+When detection fires (score >= threshold), the orchestrator must present the result to the user using S5 Decision Framing.
+
+#### S5 Confirmation Flow
+
+Use this framing template to propose decomposition:
+
+```
+📐 Scope Change: Multi-scope task detected
+
+Context: [What signals fired and why — e.g., "3 distinct domains identified
+(backend API, frontend UI, database migration) with no shared files"]
+
+Options:
+A) Decompose into sub-scopes: [proposed scope boundaries]
+   - Trade-off: Better isolation, parallel execution; overhead of scope coordination
+
+B) Continue as single scope
+   - Trade-off: Simpler coordination; risk of context overflow with large task
+
+C) Adjust boundaries (specify)
+
+Recommendation: [A or B with brief rationale]
+```
+
+#### User Response Mapping
+
+| Response | Action |
+|----------|--------|
+| Confirmed (A) | Generate scope contracts (see Scope Contract below), then invoke `/PACT:rePACT` for each sub-scope |
+| Rejected (B) | Continue single scope (today's behavior) |
+| Adjusted (C) | Generate scope contracts with user's modified boundaries, then invoke `/PACT:rePACT` |
+
+#### Autonomous Tier
+
+When **all** of the following conditions are true, skip user confirmation and proceed directly to decomposition:
+
+1. ALL strong signals fire (not merely meeting the threshold)
+2. NO counter-signals present
+3. CLAUDE.md contains `autonomous-scope-detection: enabled`
+
+**Output format**: `Scope detection: Multi-scope (autonomous) — decomposing into [scope list]`
+
+> **Note**: Autonomous mode is opt-in and disabled by default. Users enable it in CLAUDE.md after trusting the heuristics through repeated Confirmed-tier usage.
+
+### Post-Detection: Scope Contract Generation
+
+When decomposition is confirmed (by user or autonomous tier), the orchestrator generates a scope contract for each identified sub-scope before invoking rePACT. See the [Scope Contract](#scope-contract) section for the contract format and generation process.
+
+---
+
+## Scope Contract
+
+> **Purpose**: Define what a sub-scope promises to deliver to its parent orchestrator.
+> Scope contracts are generated at decomposition time using PREPARE output and serve as
+> the authoritative agreement between parent and sub-scope for deliverables and interfaces.
+
+### Contract Format
+
+Each sub-scope receives a scope contract with the following structure:
+
+```
+Scope Contract: {scope-name}
+
+Identity:
+  scope_id: {kebab-case identifier, e.g., "backend-api"}
+  parent_scope: {parent scope_id or "root"}
+  executor: rePACT
+
+Deliverables:
+  - {Expected file paths or patterns this scope produces}
+  - {Non-file artifacts: API endpoints, schemas, migrations, etc.}
+
+Interfaces:
+  exports:
+    - {Types, endpoints, APIs this scope exposes to siblings}
+  imports:
+    - {What this scope expects from sibling scopes}
+
+Constraints:
+  shared_files: []  # Files this scope must NOT modify (owned by siblings)
+  conventions: []   # Coding conventions to follow (from parent or prior scopes)
+```
+
+### Design Principles
+
+- **Minimal contracts** (~5-10 lines per scope): The integration phase catches what the contract does not specify. Over-specifying front-loads context cost into the orchestrator.
+- **Backend-agnostic**: The contract defines WHAT a scope delivers, not HOW. The same contract format works whether the executor is rePACT (today) or TeammateTool (future).
+- **Generated, not authored**: The orchestrator populates contracts from PREPARE output and detection analysis. Contracts are not hand-written.
+
+### Generation Process
+
+1. Identify sub-scope boundaries from detection analysis (confirmed or adjusted by user)
+2. For each sub-scope:
+   a. Assign `scope_id` from domain keywords (e.g., "backend-api", "frontend-ui", "database-migration")
+   b. List expected deliverables from PREPARE output file references
+   c. Identify interface exports/imports by analyzing cross-scope references in PREPARE output
+   d. Set shared file constraints by comparing file lists across scopes (overlapping files go to constraints)
+   e. Propagate parent conventions (from plan or ARCHITECT output if available)
+3. Present contracts in the rePACT invocation prompt for each sub-scope
+
+### Contract Lifecycle
+
+```
+Detection fires → User confirms boundaries → Contracts generated
+    → Passed to rePACT per sub-scope → Sub-scope executes against contract
+    → Sub-scope handoff includes contract fulfillment section
+    → Integration phase verifies contracts across sub-scopes
+```
+
+### Contract Fulfillment in Handoff
+
+When a sub-scope completes, its handoff includes a contract fulfillment section mapping actual outputs to contracted items:
+
+```
+Contract Fulfillment:
+  Deliverables:
+    - ✅ {delivered item} → {actual file/artifact}
+    - ❌ {undelivered item} → {reason}
+  Interfaces:
+    exports: {what was actually exposed}
+    imports: {what was actually consumed from siblings}
+  Deviations: {any departures from the contract, with rationale}
+```
+
+The integration phase uses fulfillment sections from all sub-scopes to verify cross-scope compatibility.
+
 ---
 
 ## Related
