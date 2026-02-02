@@ -36,12 +36,15 @@ if str(_hooks_dir) not in sys.path:
 from shared.task_utils import get_task_list
 
 # Import staleness detection (extracted to staleness.py for maintainability).
-# Re-exported here so that existing consumers and tests that patch
-# "session_init.<name>" continue to work without changes.
+# Public names are get_project_claude_md_path / estimate_tokens in staleness.py.
+# Re-exported here with underscore aliases so existing consumers and tests
+# that patch "session_init._get_project_claude_md_path" continue to work.
 from staleness import (  # noqa: F401
     check_pinned_staleness as _staleness_check,
     PINNED_STALENESS_DAYS,
     PINNED_CONTEXT_TOKEN_BUDGET,
+    get_project_claude_md_path,
+    estimate_tokens,
     _get_project_claude_md_path,
     _estimate_tokens,
 )
@@ -427,7 +430,10 @@ def main():
         # 5. Check for stale pinned context
         staleness_msg = check_pinned_staleness()
         if staleness_msg:
-            context_parts.append(staleness_msg)
+            if "failed" in staleness_msg.lower():
+                system_messages.append(staleness_msg)
+            else:
+                context_parts.append(staleness_msg)
 
         # 6. Check for in_progress Tasks (resumption context via Task integration)
         tasks = get_task_list()

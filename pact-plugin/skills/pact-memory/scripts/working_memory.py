@@ -34,7 +34,7 @@ RETRIEVED_CONTEXT_HEADER = "## Retrieved Context"
 RETRIEVED_CONTEXT_COMMENT = "<!-- Auto-managed by pact-memory skill. Last 3 retrieved memories shown. -->"
 MAX_RETRIEVED_MEMORIES = 3
 
-# Token budget constants (configurable).
+# Token budget constants.
 # Approximation: 1 token ~ 0.75 words, so word_count * 1.3 ~ token count.
 WORKING_MEMORY_TOKEN_BUDGET = 800
 RETRIEVED_CONTEXT_TOKEN_BUDGET = 500
@@ -69,7 +69,7 @@ def _get_claude_md_path() -> Optional[Path]:
             text=True,
             timeout=5
         )
-        if result.returncode == 0:
+        if result.returncode == 0 and result.stdout.strip():
             git_root = result.stdout.strip()
             claude_md = Path(git_root) / "CLAUDE.md"
             if claude_md.exists():
@@ -91,6 +91,8 @@ def _estimate_tokens(text: str) -> int:
 
     Uses word count multiplied by 1.3 as a simple approximation for
     English text. No external tokenizer dependency required.
+
+    NOTE: Twin copy exists in hooks/staleness.py (estimate_tokens) -- keep in sync.
 
     Args:
         text: The text to estimate tokens for.
@@ -129,8 +131,10 @@ def _compress_memory_entry(entry: str) -> str:
     for line in lines[1:]:
         if line.startswith("**Context**:"):
             context_value = line.split("**Context**:", 1)[1].strip()
-            # Take first sentence (up to first period, or first 120 chars)
-            period_idx = context_value.find(".")
+            # Take first sentence (up to first ". " boundary, or first 120 chars).
+            # Uses ". " instead of "." to avoid truncating at version numbers
+            # like v2.3.1 or decimal values.
+            period_idx = context_value.find(". ")
             if period_idx > 0 and period_idx < 120:
                 summary_text = context_value[:period_idx + 1]
             else:
@@ -192,10 +196,11 @@ def _apply_token_budget(
     if total_tokens <= token_budget:
         return result
 
-    # Still over budget: drop entries from the end until we fit
+    # Still over budget: drop entries from the end until we fit.
+    # Subtract the popped entry's tokens instead of recalculating the full sum.
     while len(result) > 1 and total_tokens > token_budget:
-        result.pop()
-        total_tokens = sum(_estimate_tokens(e) for e in result)
+        removed = result.pop()
+        total_tokens -= _estimate_tokens(removed)
 
     return result
 
@@ -332,8 +337,8 @@ def sync_to_claude_md(
     """
     Sync a memory entry to the Working Memory section of CLAUDE.md.
 
-    Maintains a rolling window of the last 7 memories. New entries are added
-    at the top of the section, and entries beyond 7 are removed.
+    Maintains a rolling window of the last 5 memories. New entries are added
+    at the top of the section, and entries beyond MAX_WORKING_MEMORIES are removed.
 
     This function is designed for graceful degradation - if CLAUDE.md doesn't
     exist or the sync fails for any reason, it logs a warning but doesn't
@@ -563,10 +568,11 @@ def sync_retrieved_to_claude_md(
 
         # Apply token budget: reduce entry count if over budget.
         # Retrieved entries are already compact (~200 chars each), drop oldest rather than compress.
+        # Subtract the popped entry's tokens instead of recalculating the full sum.
         total_tokens = sum(_estimate_tokens(e) for e in trimmed_entries)
         while len(trimmed_entries) > 1 and total_tokens > RETRIEVED_CONTEXT_TOKEN_BUDGET:
-            trimmed_entries.pop()
-            total_tokens = sum(_estimate_tokens(e) for e in trimmed_entries)
+            removed = trimmed_entries.pop()
+            total_tokens -= _estimate_tokens(removed)
 
         # Build new section content
         section_lines = [

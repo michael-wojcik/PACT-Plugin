@@ -18,9 +18,9 @@ and under the 500-line maintainability limit.
 import os
 import re
 import subprocess
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
+from typing import List, Optional, Tuple
 
 
 # Staleness detection constants
@@ -35,12 +35,13 @@ PINNED_STALENESS_DAYS = 30
 PINNED_CONTEXT_TOKEN_BUDGET = 1200
 
 
-def _get_project_claude_md_path() -> Optional[Path]:
+def get_project_claude_md_path() -> Optional[Path]:
     """
     Get the path to the project-level CLAUDE.md.
 
     Checks CLAUDE_PROJECT_DIR env var first, then falls back to git
-    worktree/repo root detection via `git rev-parse --show-toplevel`.
+    worktree/repo root detection via `git rev-parse --show-toplevel`,
+    then to the current working directory.
 
     Returns:
         Path to project CLAUDE.md if found, None otherwise.
@@ -59,7 +60,7 @@ def _get_project_claude_md_path() -> Optional[Path]:
             text=True,
             timeout=5
         )
-        if result.returncode == 0:
+        if result.returncode == 0 and result.stdout.strip():
             git_root = result.stdout.strip()
             path = Path(git_root) / "CLAUDE.md"
             if path.exists():
@@ -67,12 +68,23 @@ def _get_project_claude_md_path() -> Optional[Path]:
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         pass
 
+    # Last resort: current working directory
+    path = Path.cwd() / "CLAUDE.md"
+    if path.exists():
+        return path
+
     return None
 
 
-def _estimate_tokens(text: str) -> int:
+# Backward-compatible alias (tests and session_init patch the underscore name)
+_get_project_claude_md_path = get_project_claude_md_path
+
+
+def estimate_tokens(text: str) -> int:
     """
     Estimate token count using word count * 1.3 approximation.
+
+    NOTE: Twin copy exists in working_memory.py (_estimate_tokens) -- keep in sync.
 
     Args:
         text: The text to estimate tokens for.
@@ -85,38 +97,21 @@ def _estimate_tokens(text: str) -> int:
     return int(len(text.split()) * 1.3)
 
 
-def check_pinned_staleness(claude_md_path: Optional[Path] = None) -> Optional[str]:
+# Backward-compatible alias (tests and session_init import the underscore name)
+_estimate_tokens = estimate_tokens
+
+
+def _parse_pinned_section(content: str) -> Optional[Tuple[int, int, str]]:
     """
-    Detect stale pinned context entries in the project CLAUDE.md.
-
-    A pinned entry is considered stale if it references a merged PR with a
-    date older than PINNED_STALENESS_DAYS. Stale entries get a
-    <!-- STALE: Last relevant YYYY-MM-DD --> comment prepended before their
-    heading (if not already marked).
-
-    Also checks if the total pinned content exceeds the token budget and
-    adds a warning comment if so (does NOT auto-delete pins).
+    Extract the Pinned Context section from CLAUDE.md content.
 
     Args:
-        claude_md_path: Explicit path to CLAUDE.md. If None, resolved via
-            _get_project_claude_md_path(). Callers (e.g. session_init.py)
-            may pass the path explicitly so their own resolution can be
-            patched independently in tests.
+        content: Full CLAUDE.md file content.
 
     Returns:
-        Informational message about stale pins found, or None.
+        Tuple of (pinned_start, pinned_end, pinned_content) or None if
+        no Pinned Context section exists or it is empty.
     """
-    if claude_md_path is None:
-        claude_md_path = _get_project_claude_md_path()
-    if claude_md_path is None:
-        return None
-
-    try:
-        content = claude_md_path.read_text(encoding="utf-8")
-    except (IOError, UnicodeDecodeError):
-        return None
-
-    # Find the Pinned Context section
     pinned_match = re.search(r'^## Pinned Context\s*\n', content, re.MULTILINE)
     if not pinned_match:
         return None
@@ -134,28 +129,48 @@ def check_pinned_staleness(claude_md_path: Optional[Path] = None) -> Optional[st
     if not pinned_content.strip():
         return None
 
-    # Parse individual pinned entries (each starts with ###)
+    return pinned_start, pinned_end, pinned_content
+
+
+def detect_stale_entries(
+    pinned_content: str,
+) -> List[Tuple[int, str, str]]:
+    """
+    Detect stale pinned context entries without modifying them.
+
+    A pinned entry is stale if it contains a date (in a merged-PR reference
+    or as a standalone YYYY-MM-DD) older than PINNED_STALENESS_DAYS, and
+    has not already been marked with a STALE comment.
+
+    Args:
+        pinned_content: The text of the Pinned Context section (after the
+            ## heading).
+
+    Returns:
+        List of (entry_index, date_string, entry_heading) tuples for each
+        stale entry found. entry_index is the position within entry_starts.
+    """
     entry_pattern = re.compile(r'^### ', re.MULTILINE)
     entry_starts = [m.start() for m in entry_pattern.finditer(pinned_content)]
 
     if not entry_starts:
-        return None
+        return []
 
-    now = datetime.now()
+    now = datetime.now(timezone.utc)
     stale_threshold = now - timedelta(days=PINNED_STALENESS_DAYS)
-    stale_count = 0
-    modified = False
 
     # Pattern to match "PR #NNN, merged YYYY-MM-DD" in entry text
     pr_merged_pattern = re.compile(
         r'PR\s*#\d+,?\s*merged\s+(\d{4}-\d{2}-\d{2})'
     )
+    # Fallback: any standalone YYYY-MM-DD date in the entry header line
+    standalone_date_pattern = re.compile(r'(\d{4}-\d{2}-\d{2})')
     # Pattern to detect existing staleness marker
     stale_marker_pattern = re.compile(r'<!-- STALE: Last relevant \d{4}-\d{2}-\d{2} -->')
 
-    # Process entries in reverse order so string offsets remain valid
-    for i in range(len(entry_starts) - 1, -1, -1):
-        start = entry_starts[i]
+    stale_entries: List[Tuple[int, str, str]] = []
+
+    for i, start in enumerate(entry_starts):
         if i + 1 < len(entry_starts):
             end = entry_starts[i + 1]
         else:
@@ -165,38 +180,96 @@ def check_pinned_staleness(claude_md_path: Optional[Path] = None) -> Optional[st
 
         # Skip entries already marked stale
         if stale_marker_pattern.search(entry_text):
-            stale_count += 1
             continue
 
-        # Look for PR merged date
+        # Extract the heading line for context
+        nl_pos = entry_text.find("\n")
+        heading = entry_text[:nl_pos] if nl_pos != -1 else entry_text
+
+        # Look for PR merged date first (most specific)
+        date_str = None
         pr_match = pr_merged_pattern.search(entry_text)
-        if not pr_match:
+        if pr_match:
+            date_str = pr_match.group(1)
+        else:
+            # Fallback: find any YYYY-MM-DD date in the heading line
+            date_match = standalone_date_pattern.search(heading)
+            if date_match:
+                date_str = date_match.group(1)
+
+        if not date_str:
             continue
 
         try:
-            merged_date = datetime.strptime(pr_match.group(1), "%Y-%m-%d")
+            entry_date = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
         except ValueError:
             continue
 
-        if merged_date < stale_threshold:
-            # Mark as stale by inserting comment after the ### heading line.
-            # The marker must be inside the entry_text (which starts at ###)
-            # so that subsequent runs find it and skip re-marking.
-            stale_marker = f"<!-- STALE: Last relevant {pr_match.group(1)} -->\n"
-            nl_pos = entry_text.find("\n")
-            if nl_pos == -1:
-                # Entry is a single line with no newline; skip it
-                continue
-            heading_end = nl_pos + 1
-            new_entry = entry_text[:heading_end] + stale_marker + entry_text[heading_end:]
-            pinned_content = (
-                pinned_content[:start] + new_entry + pinned_content[end:]
-            )
-            stale_count += 1
-            modified = True
+        if entry_date < stale_threshold:
+            stale_entries.append((i, date_str, heading))
 
-    # Check token budget for pinned content
-    pinned_tokens = _estimate_tokens(pinned_content)
+    return stale_entries
+
+
+def apply_staleness_markings(
+    content: str,
+    pinned_start: int,
+    pinned_end: int,
+    pinned_content: str,
+) -> Tuple[str, int, bool, str]:
+    """
+    Apply stale markers and budget warnings to pinned content.
+
+    Detects stale entries, inserts STALE markers, and adds a budget
+    warning comment if the content exceeds the token budget. Returns the
+    modified full file content.
+
+    Args:
+        content: Full CLAUDE.md file content.
+        pinned_start: Start offset of pinned section body in content.
+        pinned_end: End offset of pinned section body in content.
+        pinned_content: The pinned section body text.
+
+    Returns:
+        Tuple of (new_full_content, stale_count, was_modified, budget_warning_str).
+    """
+    entry_pattern = re.compile(r'^### ', re.MULTILINE)
+    entry_starts = [m.start() for m in entry_pattern.finditer(pinned_content)]
+    stale_marker_pattern = re.compile(r'<!-- STALE: Last relevant \d{4}-\d{2}-\d{2} -->')
+
+    # Count already-marked entries
+    already_stale = 0
+    for i, start in enumerate(entry_starts):
+        end = entry_starts[i + 1] if i + 1 < len(entry_starts) else len(pinned_content)
+        entry_text = pinned_content[start:end]
+        if stale_marker_pattern.search(entry_text):
+            already_stale += 1
+
+    # Detect new stale entries
+    stale_entries = detect_stale_entries(pinned_content)
+    modified = False
+
+    # Apply stale markers in reverse order so string offsets remain valid
+    for idx, date_str, _heading in reversed(stale_entries):
+        start = entry_starts[idx]
+        end = entry_starts[idx + 1] if idx + 1 < len(entry_starts) else len(pinned_content)
+        entry_text = pinned_content[start:end]
+
+        stale_marker = f"<!-- STALE: Last relevant {date_str} -->\n"
+        nl_pos = entry_text.find("\n")
+        if nl_pos == -1:
+            # Entry is a single line with no newline; skip it
+            continue
+        heading_end = nl_pos + 1
+        new_entry = entry_text[:heading_end] + stale_marker + entry_text[heading_end:]
+        pinned_content = pinned_content[:start] + new_entry + pinned_content[end:]
+        modified = True
+
+    total_stale = already_stale + len(stale_entries)
+
+    # Check token budget BEFORE inserting the warning (so warning text
+    # does not inflate its own count)
+    pinned_tokens = estimate_tokens(pinned_content)
     budget_warning = ""
     if pinned_tokens > PINNED_CONTEXT_TOKEN_BUDGET:
         budget_warning_comment = (
@@ -210,9 +283,64 @@ def check_pinned_staleness(claude_md_path: Optional[Path] = None) -> Optional[st
             modified = True
         budget_warning = f", ~{pinned_tokens} tokens (budget: {PINNED_CONTEXT_TOKEN_BUDGET})"
 
+    new_content = content[:pinned_start] + pinned_content + content[pinned_end:]
+    return new_content, total_stale, modified, budget_warning
+
+
+def check_pinned_staleness(claude_md_path: Optional[Path] = None) -> Optional[str]:
+    """
+    Detect stale pinned context entries in the project CLAUDE.md.
+
+    A pinned entry is considered stale if it contains a date older than
+    PINNED_STALENESS_DAYS. Dates are detected in PR merge references
+    (e.g. "PR #123, merged 2026-01-15") and as standalone YYYY-MM-DD
+    patterns in entry headings.
+
+    Stale entries get a <!-- STALE: Last relevant YYYY-MM-DD --> comment
+    inserted after their heading (if not already marked).
+
+    Also checks if the total pinned content exceeds the token budget and
+    adds a warning comment if so (does NOT auto-delete pins).
+
+    This function orchestrates detection (detect_stale_entries) and
+    mutation (apply_staleness_markings) as separate steps for testability.
+
+    Args:
+        claude_md_path: Explicit path to CLAUDE.md. If None, resolved via
+            get_project_claude_md_path(). Callers (e.g. session_init.py)
+            may pass the path explicitly so their own resolution can be
+            patched independently in tests.
+
+    Returns:
+        Informational message about stale pins found, or None.
+    """
+    if claude_md_path is None:
+        claude_md_path = _get_project_claude_md_path()
+    if claude_md_path is None:
+        return None
+
+    try:
+        content = claude_md_path.read_text(encoding="utf-8")
+    except (IOError, UnicodeDecodeError):
+        return None
+
+    parsed = _parse_pinned_section(content)
+    if parsed is None:
+        return None
+
+    pinned_start, pinned_end, pinned_content = parsed
+
+    entry_pattern = re.compile(r'^### ', re.MULTILINE)
+    entry_starts = [m.start() for m in entry_pattern.finditer(pinned_content)]
+    if not entry_starts:
+        return None
+
+    new_content, stale_count, modified, budget_warning = apply_staleness_markings(
+        content, pinned_start, pinned_end, pinned_content
+    )
+
     # Write back if modified
     if modified:
-        new_content = content[:pinned_start] + pinned_content + content[pinned_end:]
         try:
             claude_md_path.write_text(new_content, encoding="utf-8")
         except (IOError, OSError) as e:
