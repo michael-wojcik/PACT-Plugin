@@ -3,7 +3,6 @@
 > **Purpose**: Define the heuristic signals, confidence model, and activation tiers
 > for recognizing when a task exceeds single-scope capacity.
 > Used by `orchestrate` (consumer) after PREPARE phase output analysis.
-> See also: [Scoped Orchestration Design Doc](../../docs/plans/2026-02-01-v3-scoped-orchestration-design.md)
 
 ### Detection Heuristics
 
@@ -36,7 +35,8 @@ Confidence is derived from signal combinations, then adjusted by counter-signals
 | 0 | any | any | — | Single-scope (no detection triggered) |
 | 1 | 0 | any | Low | Log observation, continue single-scope |
 | 1 | 1+ | 0 | Medium | Propose decomposition (Confirmed tier) |
-| 1 | 1+ | 1+ | Low-Medium | Demote confidence; may still propose if medium remains |
+| 1 | 1+ | 1+ | Low | Log observation, continue single-scope |
+| 2+ | 0 | 0 | Medium | Propose decomposition (Confirmed tier) |
 | 2+ | 1+ | 0 | High | Auto-decompose if Autonomous enabled; else Confirmed |
 | 2+ | any | 1+ | Medium | Propose decomposition (Confirmed tier) |
 
