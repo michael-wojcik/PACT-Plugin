@@ -156,8 +156,8 @@ check_pattern "$COMMANDS_DIR/rePACT.md" \
 echo ""
 
 # --- 7. ATOMIZE and CONSOLIDATE phases in orchestrate.md ---
-# orchestrate.md must document both scoped phases: ATOMIZE (dispatch sub-scopes)
-# and CONSOLIDATE (cross-scope verification), including delegation patterns.
+# orchestrate.md must document both scoped phases (or reference them via extract).
+# Phase sections exist with either full content or summary + protocol reference.
 echo "7. ATOMIZE and CONSOLIDATE phases in orchestrate.md:"
 check_pattern "$COMMANDS_DIR/orchestrate.md" \
     "ATOMIZE phase section exists" \
@@ -165,13 +165,32 @@ check_pattern "$COMMANDS_DIR/orchestrate.md" \
 check_pattern "$COMMANDS_DIR/orchestrate.md" \
     "CONSOLIDATE phase section exists" \
     "CONSOLIDATE Phase (Scoped Orchestration Only)"
+# Check that orchestrate.md references the extracted protocol OR contains full content
+# (summaries reference the protocol, so check for that)
 check_pattern "$COMMANDS_DIR/orchestrate.md" \
-    "Consolidate delegates to architect" \
+    "ATOMIZE references protocol or contains dispatch logic" \
+    "pact-scoped-phases.md\|Invoke.*rePACT"
+check_pattern "$COMMANDS_DIR/orchestrate.md" \
+    "CONSOLIDATE references protocol or contains delegation" \
+    "pact-scoped-phases.md\|pact-architect.*contract"
+check_pattern "$COMMANDS_DIR/orchestrate.md" \
+    "Consolidation failure routes through imPACT" \
+    "imPACT"
+echo ""
+
+# --- 7b. Full ATOMIZE/CONSOLIDATE content in pact-scoped-phases.md ---
+# The extracted protocol must contain the full phase details.
+echo "7b. Full ATOMIZE/CONSOLIDATE content in pact-scoped-phases.md:"
+check_pattern "$PROTOCOLS_DIR/pact-scoped-phases.md" \
+    "ATOMIZE phase has dispatch logic" \
+    "Invoke.*rePACT"
+check_pattern "$PROTOCOLS_DIR/pact-scoped-phases.md" \
+    "CONSOLIDATE delegates to architect" \
     "pact-architect.*contract"
-check_pattern "$COMMANDS_DIR/orchestrate.md" \
-    "Consolidate delegates to test engineer" \
+check_pattern "$PROTOCOLS_DIR/pact-scoped-phases.md" \
+    "CONSOLIDATE delegates to test engineer" \
     "pact-test-engineer.*cross-scope"
-check_pattern "$COMMANDS_DIR/orchestrate.md" \
+check_pattern "$PROTOCOLS_DIR/pact-scoped-phases.md" \
     "Consolidation failure routes through imPACT" \
     "imPACT"
 echo ""
