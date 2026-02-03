@@ -238,9 +238,9 @@ When a phase is skipped but a coder encounters a decision that would have been h
 
 ---
 
-### Phase 1: PREPARE → `pact-preparer`
+### PREPARE Phase → `pact-preparer`
 
-**Skip criteria met (including completeness check)?** → Proceed to Phase 2.
+**Skip criteria met (including completeness check)?** → Proceed to ARCHITECT phase.
 
 **Plan sections to pass** (if plan exists):
 - "Preparation Phase"
@@ -302,9 +302,9 @@ When detection fires (score >= threshold), follow the evaluation response protoc
 
 ---
 
-### Phase 2: ARCHITECT → `pact-architect`
+### ARCHITECT Phase → `pact-architect`
 
-**Skip criteria met (including completeness check, after re-assessment)?** → Proceed to Phase 3.
+**Skip criteria met (including completeness check, after re-assessment)?** → Proceed to CODE phase.
 
 **Plan sections to pass** (if plan exists):
 - "Architecture Phase"
@@ -330,7 +330,7 @@ When detection fires (score >= threshold), follow the evaluation response protoc
 
 ---
 
-### Phase 3: CODE → `pact-*-coder(s)`
+### CODE Phase → `pact-*-coder(s)`
 
 **Always runs.** This is the core work.
 
@@ -450,7 +450,7 @@ This phase dispatches sub-scopes for independent execution. Each sub-scope runs 
 
 ### CONSOLIDATE Phase (Scoped Orchestration Only)
 
-**Skip criteria**: No decomposition occurred → Proceed to Phase 4 (TEST).
+**Skip criteria**: No decomposition occurred → Proceed to TEST phase.
 
 This phase verifies that independently-developed sub-scopes are compatible before comprehensive testing.
 
@@ -484,7 +484,7 @@ This phase verifies that independently-developed sub-scopes are compatible befor
 
 ---
 
-### Phase 4: TEST → `pact-test-engineer`
+### TEST Phase → `pact-test-engineer`
 
 **Skip criteria met?** → Proceed to "After All Phases Complete."
 

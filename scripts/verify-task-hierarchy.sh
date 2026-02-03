@@ -153,8 +153,8 @@ verify_patterns "rePACT.md" "Scope metadata convention" \
     "metadata"
 echo ""
 
-# --- Phase numbering sequence ---
-echo "Phase numbering sequence (orchestrate.md):"
+# --- Phase headings ---
+echo "Phase headings (orchestrate.md):"
 
 # Helper: check that orchestrate.md contains a pattern (reuse check_pattern logic inline)
 check_pattern_file() {
@@ -179,12 +179,12 @@ check_pattern_file() {
     fi
 }
 
-# Standard phases (numbered 1-4)
-check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 1: PREPARE exists" "Phase 1: PREPARE"
-check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 2: ARCHITECT exists" "Phase 2: ARCHITECT"
-check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 3: CODE exists" "Phase 3: CODE"
-check_pattern_file "$COMMANDS_DIR/orchestrate.md" "Phase 4: TEST exists" "Phase 4: TEST"
-# Scoped phases (unnumbered, only active when decomposition occurs)
+# Standard phases (unnumbered - PACT acronym provides sequencing)
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "PREPARE Phase exists" "### PREPARE Phase"
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "ARCHITECT Phase exists" "### ARCHITECT Phase"
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "CODE Phase exists" "### CODE Phase"
+check_pattern_file "$COMMANDS_DIR/orchestrate.md" "TEST Phase exists" "### TEST Phase"
+# Scoped phases (only active when decomposition occurs)
 check_pattern_file "$COMMANDS_DIR/orchestrate.md" "ATOMIZE Phase exists" "ATOMIZE Phase (Scoped Orchestration Only)"
 check_pattern_file "$COMMANDS_DIR/orchestrate.md" "CONSOLIDATE Phase exists" "CONSOLIDATE Phase (Scoped Orchestration Only)"
 echo ""

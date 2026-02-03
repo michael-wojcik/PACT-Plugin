@@ -226,10 +226,10 @@ else
     echo "  ✗ orchestrate.md task hierarchy missing CONSOLIDATE phase"
     FAIL=$((FAIL + 1))
 fi
-# TEST must be Phase 4 (standard flow; scoped phases are unnumbered)
+# TEST Phase exists (PACT acronym provides sequencing)
 check_pattern "$COMMANDS_DIR/orchestrate.md" \
-    "TEST is Phase 4" \
-    "Phase 4: TEST"
+    "TEST Phase exists" \
+    "### TEST Phase"
 echo ""
 
 # --- Summary ---
