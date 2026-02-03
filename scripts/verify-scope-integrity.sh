@@ -169,28 +169,28 @@ check_pattern "$COMMANDS_DIR/orchestrate.md" \
 # (summaries reference the protocol, so check for that)
 check_pattern "$COMMANDS_DIR/orchestrate.md" \
     "ATOMIZE references protocol or contains dispatch logic" \
-    "pact-scoped-phases.md\|Invoke.*rePACT"
+    "pact-scope-phases.md\|Invoke.*rePACT"
 check_pattern "$COMMANDS_DIR/orchestrate.md" \
     "CONSOLIDATE references protocol or contains delegation" \
-    "pact-scoped-phases.md\|pact-architect.*contract"
+    "pact-scope-phases.md\|pact-architect.*contract"
 check_pattern "$COMMANDS_DIR/orchestrate.md" \
     "Consolidation failure routes through imPACT" \
     "imPACT"
 echo ""
 
-# --- 7b. Full ATOMIZE/CONSOLIDATE content in pact-scoped-phases.md ---
+# --- 7b. Full ATOMIZE/CONSOLIDATE content in pact-scope-phases.md ---
 # The extracted protocol must contain the full phase details.
-echo "7b. Full ATOMIZE/CONSOLIDATE content in pact-scoped-phases.md:"
-check_pattern "$PROTOCOLS_DIR/pact-scoped-phases.md" \
+echo "7b. Full ATOMIZE/CONSOLIDATE content in pact-scope-phases.md:"
+check_pattern "$PROTOCOLS_DIR/pact-scope-phases.md" \
     "ATOMIZE phase has dispatch logic" \
     "Invoke.*rePACT"
-check_pattern "$PROTOCOLS_DIR/pact-scoped-phases.md" \
+check_pattern "$PROTOCOLS_DIR/pact-scope-phases.md" \
     "CONSOLIDATE delegates to architect" \
     "pact-architect.*contract"
-check_pattern "$PROTOCOLS_DIR/pact-scoped-phases.md" \
+check_pattern "$PROTOCOLS_DIR/pact-scope-phases.md" \
     "CONSOLIDATE delegates to test engineer" \
     "pact-test-engineer.*cross-scope"
-check_pattern "$PROTOCOLS_DIR/pact-scoped-phases.md" \
+check_pattern "$PROTOCOLS_DIR/pact-scope-phases.md" \
     "Consolidation failure routes through imPACT" \
     "imPACT"
 echo ""
