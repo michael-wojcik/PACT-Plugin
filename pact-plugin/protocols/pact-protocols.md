@@ -1455,7 +1455,7 @@ These mappings are noted for future reference. C5 does not depend on TeammateToo
 
 This phase dispatches sub-scopes for independent execution. Each sub-scope runs a full PACT cycle (Prepare → Architect → Code → Test) via rePACT.
 
-**Dispatch**: Invoke `/PACT:rePACT` for each sub-scope with its scope contract. Sub-scopes run concurrently (default) unless they share files. When generating scope contracts, ensure `shared_files` constraints are set per the generation process in [pact-scope-contract.md](pact-scope-contract.md) -- sibling scopes must not modify each other's owned files.
+**Dispatch**: If `worktree-mode` is not `never`, create per-scope worktrees per [Worktree Protocol](pact-worktree.md#setup-protocol). Invoke `/PACT:rePACT` for each sub-scope with its scope contract. Sub-scopes run concurrently (default) unless they share files. When generating scope contracts, ensure `shared_files` constraints are set per the generation process in [pact-scope-contract.md](pact-scope-contract.md) -- sibling scopes must not modify each other's owned files.
 
 **Sub-scope failure policy**: Sub-scope failure is isolated — sibling scopes continue independently. Individual scope failures route through `/PACT:imPACT` to the affected scope only. However, when a sub-scope emits HALT, the parent orchestrator stops ALL sub-scopes (consistent with algedonic protocol: "Stop ALL agents"). Preserve work-in-progress for all scopes. After HALT resolution, review interrupted scopes before resuming.
 

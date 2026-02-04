@@ -393,7 +393,7 @@ Before concurrent dispatch, check internally: shared files? shared interfaces? c
 
 **Include in prompts for concurrent specialists**: "You are working concurrently with other specialists. Your scope is [files]. Do not modify files outside your scope."
 
-**Worktree path** (if worktree active): Include `Working directory: {worktree_path}` in agent prompts. Agents must use absolute paths within this directory. See [Work Protocol](../protocols/pact-worktree.md#work-protocol).
+**Worktree path** (if worktree active): Include `Working directory: {worktree_path}` in agent prompts per S2 Pre-Dispatch Coordination above. Agents must use absolute paths within this directory. See [Work Protocol](../protocols/pact-worktree.md#work-protocol).
 
 **Invoke coder(s) with**:
 - Task description

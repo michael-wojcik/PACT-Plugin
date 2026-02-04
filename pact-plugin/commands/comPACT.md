@@ -154,7 +154,7 @@ comPACT supports optional worktree isolation based on configuration and user req
 | `worktree-mode: always` | Create worktree before dispatch |
 | `worktree-mode: never` | No worktree |
 
-**Heuristic trigger** (tiered mode): Propose worktree when task touches 3+ files across 2+ directories.
+**Heuristic trigger** (tiered mode): Propose worktree when task touches 3+ files across 2+ directories. Threshold configurable via `worktree-heuristic-threshold` setting.
 
 **Conversational overrides**:
 - "Fix the bug, use a worktree" → Create worktree
