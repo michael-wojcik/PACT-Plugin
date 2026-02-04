@@ -159,9 +159,12 @@ If you hit the nesting limit:
 
 ### Branch Behavior
 
-- **No new branch**: rePACT stays on the current feature branch
+- **No new branch**: rePACT stays on the current feature branch (or worktree branch if provided)
 - **No PR**: Results integrate into the parent task's eventual PR
 - All commits remain part of the current feature work
+- **Worktree reception**: When scope contract includes `worktree_path`, work in that isolated directory
+
+See [Worktree Protocol](../protocols/pact-worktree.md) for worktree lifecycle.
 
 ---
 
@@ -237,7 +240,15 @@ When the parent orchestrator invokes rePACT with a **scope contract** (from scop
 3. **Interfaces**: Use `imports` to understand what sibling scopes provide; use `exports` to ensure this scope exposes what siblings expect
 4. **Shared files constraint**: Do NOT modify files listed in the contract's `shared_files` — these are owned by sibling scopes. Communicate this constraint to all dispatched specialists.
 5. **Conventions**: Apply any `conventions` from the contract in addition to inherited parent conventions
-6. **Handoff**: Include a Contract Fulfillment section in the completion handoff (see After Completion below)
+6. **Worktree path**: If contract includes `worktree_path`, include it in all agent prompts:
+   ```
+   GUIDELINES:
+   - Working directory: {worktree_path}
+   - All file paths relative to this directory
+   - Do not access paths outside {worktree_path}
+   ```
+7. **Handoff**: Include a Contract Fulfillment section in the completion handoff (see After Completion below)
+8. **Merge-back**: Do NOT merge worktree branch — the parent orchestrator handles merge-back during the consolidate phase
 
 **When no scope contract is provided:** Standard rePACT behavior. No scope-aware naming, no contract fulfillment tracking, no shared file constraints.
 
