@@ -16,6 +16,7 @@
 | `worktree-mode` | `tiered`, `always`, `never` | `tiered` | When to create worktrees |
 | `worktree-directory` | path | `.worktrees` | Directory for worktrees |
 | `worktree-baseline-tests` | `always`, `on-divergence`, `never` | `always` | When to run baseline tests in new worktrees |
+| `worktree-heuristic-threshold` | string | `3+ files, 2+ dirs` | Heuristic trigger for comPACT worktree proposal |
 
 **Mode Behaviors**:
 
@@ -82,7 +83,7 @@ The `--` separator distinguishes worktree branches from intentional sub-branches
 2. For each subsequent sub-scope: attempt merge, stop on conflict
 3. After all merges: run integration tests
 
-**Merge Order**: Consider merging smaller or more independent scopes first to reduce conflict likelihood.
+**Merge Order**: Consider merging smaller or more independent scopes first to reduce conflict likelihood (e.g., backend-api before frontend-ui if frontend imports backend types).
 
 **Conflict Handling**: Stop and present options to user:
 - A) Resolve manually — pause here
@@ -93,7 +94,7 @@ Orchestrator does not auto-resolve merge conflicts.
 
 #### Cleanup Protocol
 
-**Trigger**: After successful merge to feature branch.
+**Trigger**: After successful merge to feature branch, or after user aborts during setup.
 
 1. Remove worktree: `git worktree remove .worktrees/{feature}--{suffix}`
 2. Delete branch: `git branch -d feature/{name}--{suffix}`
@@ -144,7 +145,7 @@ Orphaned worktrees detected. Run `git worktree prune` to clean up.
 
 #### rePACT.md
 
-1. On scope contract dispatch: Create per-scope worktree
+1. Before dispatching rePACT with scope contract: Orchestrator creates per-scope worktree
 2. In agent prompt: Include worktree path in guidelines
 3. On sub-scope completion: Collect for merge-back (don't merge individually)
 4. In consolidate phase: Execute sequential Merge-Back Protocol
