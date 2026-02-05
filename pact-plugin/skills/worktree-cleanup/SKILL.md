@@ -43,12 +43,12 @@ Before removal, ensure the current working directory is NOT inside the worktree 
 Use `--git-common-dir` instead of `--show-toplevel` because the latter returns the worktree root when run inside a worktree, not the main repo root.
 
 ```bash
+# From a worktree, returns absolute path; from main repo, returns relative .git — the cd && pwd wrapper normalizes both to absolute
 MAIN_GIT_DIR=$(git rev-parse --git-common-dir)
 REPO_ROOT=$(cd "$(dirname "$MAIN_GIT_DIR")" && pwd)
-cd "$REPO_ROOT"
 ```
 
-If the current working directory is inside the target worktree, navigate to the main repo root first.
+Ensure all subsequent commands use absolute paths via `$REPO_ROOT`. Claude Code's shell does not persist `cd` between calls, so do not rely on changing directories.
 
 ### Step 3: Remove the Worktree
 
@@ -113,11 +113,23 @@ Cleaned up worktree for {branch}
 | No worktrees exist | Report "No worktrees found" |
 | Multiple worktrees for related branches | List all, let user choose which to remove |
 
+## Batch Mode
+
+When cleaning up multiple worktrees at once (e.g., after CONSOLIDATE with multiple sub-scopes):
+
+1. List all sub-scope worktrees: `git worktree list`
+2. Present the full list to the user
+3. Ask for a single confirmation: "Remove all N worktrees listed above?"
+4. On confirmation, run Steps 3-4 sequentially for each worktree
+5. Report a combined summary of all removals
+
+This avoids N individual confirmations while still requiring one explicit user approval.
+
 ## Safety
 
 This skill intentionally does NOT:
 - Force-remove worktrees with uncommitted changes
 - Force-delete unmerged branches
-- Remove multiple worktrees without user confirmation for each
+- Remove multiple worktrees without user confirmation
 
 Git's built-in safety checks protect against accidental data loss. The skill surfaces those protections clearly rather than bypassing them.

@@ -41,7 +41,7 @@ All worktrees live in `.worktrees/` relative to the repo root.
 Use `--git-common-dir` instead of `--show-toplevel` because the latter returns the worktree root when run inside a worktree (e.g., when ATOMIZE creates sub-scope worktrees from the feature worktree).
 
 ```bash
-# Get main repo root (works correctly even from inside a worktree)
+# Get main repo root (from a worktree, returns absolute path; from main repo, returns relative .git — the cd && pwd wrapper normalizes both to absolute)
 MAIN_GIT_DIR=$(git rev-parse --git-common-dir)
 REPO_ROOT=$(cd "$(dirname "$MAIN_GIT_DIR")" && pwd)
 
@@ -61,6 +61,8 @@ grep -q '\.worktrees' "$REPO_ROOT/.gitignore" 2>/dev/null
 If `.worktrees` is NOT in `.gitignore`:
 1. Append `.worktrees/` to `.gitignore`
 2. Commit the change: `git add .gitignore && git commit -m "chore: add .worktrees/ to .gitignore"`
+
+Note: This commit lands on the current base branch, which is correct -- `.gitignore` is shared project configuration, not feature-specific.
 
 ### Step 4: Create the Worktree
 
