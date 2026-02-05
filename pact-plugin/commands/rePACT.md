@@ -159,9 +159,18 @@ If you hit the nesting limit:
 
 ### Branch Behavior
 
+Branch behavior depends on whether rePACT is invoked with a scope contract:
+
+**Without scope contract** (standard nested cycle):
 - **No new branch**: rePACT stays on the current feature branch
 - **No PR**: Results integrate into the parent task's eventual PR
 - All commits remain part of the current feature work
+
+**With scope contract** (from ATOMIZE phase):
+- **Receives worktree path** from the parent orchestrator
+- **Operates in isolated worktree** on a suffix branch (e.g., `feature-X--{scope_id}`)
+- All commits stay on the suffix branch within the worktree
+- Branch merges back to the feature branch during the CONSOLIDATE phase
 
 ---
 
