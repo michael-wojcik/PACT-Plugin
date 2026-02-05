@@ -30,7 +30,7 @@ Before creating anything, check if a worktree already exists for this branch.
 git worktree list
 ```
 
-- If a worktree for the target branch already exists, **reuse it**. Report: "Reusing existing worktree at {path}" and skip to Step 6.
+- If a worktree for the target branch already exists, **reuse it**. Report: "Reusing existing worktree at {path}" and skip to Step 5.
   - If the worktree appears in the list but is marked **prunable**, run `git worktree prune` first and proceed to create a new one.
 - If the branch exists but has no worktree, ask the user: "Branch `{branch}` already exists. Check out existing branch, or create a new branch name?"
 
@@ -74,27 +74,7 @@ Where `{branch}` is the feature branch name (e.g., `feature-auth` or `feature-au
 - Branch already exists: Ask user whether to check out the existing branch (`git worktree add "$REPO_ROOT/.worktrees/{branch}" {branch}` without `-b`)
 - Disk/permissions error: Surface git's error message and offer fallback to working in the main repo directory
 
-### Step 5: Install Dependencies
-
-Auto-detect the project's dependency system and install in the new worktree.
-
-```bash
-cd "$REPO_ROOT/.worktrees/{branch}"
-```
-
-Check for and run the **first matching** dependency installer:
-
-| File Present | Command |
-|-------------|---------|
-| `package.json` | `npm install` |
-| `Cargo.toml` | `cargo build` |
-| `requirements.txt` | `pip install -r requirements.txt` (ensure the project's virtual environment is activated first) |
-| `pyproject.toml` | `poetry install` |
-| `go.mod` | `go mod download` |
-
-If none of these files exist, skip this step (no dependencies to install).
-
-### Step 6: Report
+### Step 5: Report
 
 Output the result:
 
@@ -107,7 +87,7 @@ Branch: {branch}
 
 ## Output
 
-The orchestrator captures the worktree path from the Step 6 report line:
+The orchestrator captures the worktree path from the Step 5 report line:
 
 > Worktree ready at `{absolute_path}`
 
@@ -121,4 +101,3 @@ Store this as `worktree_path` for the current workflow. Pass it to all specialis
 | Worktree directory exists but is stale | Run `git worktree prune` first, then retry |
 | Branch name already exists | Ask user: check out existing or create new name |
 | Creation fails (disk/permissions) | Surface error, offer fallback to main repo |
-| No dependency files found | Skip dependency install step |
