@@ -81,30 +81,54 @@ echo ""
 
 # --- 3. orchestrate.md references worktree-setup at workflow start ---
 echo "3. orchestrate.md references worktree-setup at workflow start:"
-check_pattern "$COMMANDS_DIR/orchestrate.md" \
-    "orchestrate.md references worktree-setup" \
-    "worktree-setup"
+# Extract the numbered workflow steps (between --- separator and ### Plan Status Handling)
+workflow_start=$(sed -n '/^1\. \*\*Set up worktree/,/^### Plan Status/p' "$COMMANDS_DIR/orchestrate.md" | sed '$d')
+if echo "$workflow_start" | grep -q "worktree-setup"; then
+    echo "  ✓ orchestrate.md references worktree-setup in workflow start steps"
+    PASS=$((PASS + 1))
+else
+    echo "  ✗ orchestrate.md references worktree-setup in workflow start steps: pattern not found in workflow start section"
+    FAIL=$((FAIL + 1))
+fi
 echo ""
 
-# --- 4. comPACT.md references worktree-setup at workflow start ---
-echo "4. comPACT.md references worktree-setup at workflow start:"
-check_pattern "$COMMANDS_DIR/comPACT.md" \
-    "comPACT.md references worktree-setup" \
-    "worktree-setup"
+# --- 4. comPACT.md references worktree-setup in pre-invocation ---
+echo "4. comPACT.md references worktree-setup in pre-invocation:"
+# Extract the Pre-Invocation section
+pre_invocation=$(sed -n '/^## Pre-Invocation/,/^## /p' "$COMMANDS_DIR/comPACT.md" | sed '$d')
+if echo "$pre_invocation" | grep -q "worktree-setup"; then
+    echo "  ✓ comPACT.md references worktree-setup in Pre-Invocation section"
+    PASS=$((PASS + 1))
+else
+    echo "  ✗ comPACT.md references worktree-setup in Pre-Invocation section: pattern not found in Pre-Invocation section"
+    FAIL=$((FAIL + 1))
+fi
 echo ""
 
 # --- 5. comPACT.md includes peer-review prompt after commit ---
 echo "5. comPACT.md includes peer-review prompt after commit:"
-check_pattern "$COMMANDS_DIR/comPACT.md" \
-    "comPACT.md references peer-review" \
-    "peer-review"
+# Extract the After Specialist Completes section
+after_specialist=$(sed -n '/^## After Specialist Completes/,/^## /p' "$COMMANDS_DIR/comPACT.md" | sed '$d')
+if echo "$after_specialist" | grep -q "Create PR"; then
+    echo "  ✓ comPACT.md includes post-commit peer-review prompt"
+    PASS=$((PASS + 1))
+else
+    echo "  ✗ comPACT.md includes post-commit peer-review prompt: pattern not found in After Specialist Completes section"
+    FAIL=$((FAIL + 1))
+fi
 echo ""
 
 # --- 6. peer-review.md includes worktree-cleanup after merge ---
 echo "6. peer-review.md includes worktree-cleanup after merge:"
-check_pattern "$COMMANDS_DIR/peer-review.md" \
-    "peer-review.md references worktree-cleanup" \
-    "worktree-cleanup"
+# Extract the post-merge section
+post_merge=$(sed -n '/^\*\*After user-authorized merge\*\*/,/^---$\|^## /p' "$COMMANDS_DIR/peer-review.md" | sed '$d')
+if echo "$post_merge" | grep -q "worktree-cleanup"; then
+    echo "  ✓ peer-review.md references worktree-cleanup in post-merge section"
+    PASS=$((PASS + 1))
+else
+    echo "  ✗ peer-review.md references worktree-cleanup in post-merge section: pattern not found in post-merge section"
+    FAIL=$((FAIL + 1))
+fi
 echo ""
 
 # --- 7. pact-scope-phases.md ATOMIZE references worktree-setup ---
@@ -183,6 +207,26 @@ check_pattern "$SKILLS_DIR/worktree-setup/SKILL.md" \
 check_pattern "$SKILLS_DIR/worktree-cleanup/SKILL.md" \
     "worktree-cleanup SKILL.md has Edge Cases section" \
     "## Edge Cases"
+echo ""
+
+# --- 15. imPACT.md contains worktree context for phase re-entry ---
+echo "15. imPACT.md contains worktree context for phase re-entry:"
+check_pattern "$COMMANDS_DIR/imPACT.md" \
+    "imPACT.md references worktree context" \
+    "worktree"
+echo ""
+
+# --- 16. orchestrate.md CONSOLIDATE references worktree-cleanup ---
+echo "16. orchestrate.md CONSOLIDATE references worktree-cleanup:"
+# Extract the CONSOLIDATE Phase section from orchestrate.md
+consolidate_orchestrate=$(sed -n '/^### CONSOLIDATE Phase/,/^### \|^---$/p' "$COMMANDS_DIR/orchestrate.md" | sed '$d')
+if echo "$consolidate_orchestrate" | grep -q "worktree-cleanup"; then
+    echo "  ✓ orchestrate.md CONSOLIDATE phase references worktree-cleanup"
+    PASS=$((PASS + 1))
+else
+    echo "  ✗ orchestrate.md CONSOLIDATE phase references worktree-cleanup: pattern not found in CONSOLIDATE section"
+    FAIL=$((FAIL + 1))
+fi
 echo ""
 
 # --- Summary ---
