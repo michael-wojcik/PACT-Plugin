@@ -169,23 +169,41 @@ echo ""
 
 # --- 10. orchestrate.md contains worktree path propagation instruction ---
 echo "10. orchestrate.md contains worktree path propagation instruction:"
-check_pattern "$COMMANDS_DIR/orchestrate.md" \
-    "orchestrate.md references worktree path propagation" \
-    "worktree_path"
+# Extract the S2 Pre-Dispatch Coordination subsection within CODE Phase
+s2_predispatch=$(sed -n '/^#### S2 Pre-Dispatch Coordination/,/^####\|^###\|^---$/p' "$COMMANDS_DIR/orchestrate.md" | sed '$d')
+if echo "$s2_predispatch" | grep -q "worktree_path"; then
+    echo "  ✓ orchestrate.md references worktree path propagation in S2 Pre-Dispatch section"
+    PASS=$((PASS + 1))
+else
+    echo "  ✗ orchestrate.md references worktree path propagation in S2 Pre-Dispatch section: pattern not found"
+    FAIL=$((FAIL + 1))
+fi
 echo ""
 
 # --- 11. comPACT.md agent prompt templates include worktree path ---
 echo "11. comPACT.md agent prompt templates include worktree path:"
-check_pattern "$COMMANDS_DIR/comPACT.md" \
-    "comPACT.md references worktree_path in agent prompts" \
-    "worktree_path"
+# Extract the Invocation section containing agent prompt templates
+invocation_section=$(sed -n '/^## Invocation/,/^## /p' "$COMMANDS_DIR/comPACT.md" | sed '$d')
+if echo "$invocation_section" | grep -q "worktree_path"; then
+    echo "  ✓ comPACT.md references worktree_path in Invocation section"
+    PASS=$((PASS + 1))
+else
+    echo "  ✗ comPACT.md references worktree_path in Invocation section: pattern not found"
+    FAIL=$((FAIL + 1))
+fi
 echo ""
 
 # --- 12. rePACT.md documents receiving worktree path ---
 echo "12. rePACT.md documents receiving worktree path:"
-check_pattern "$COMMANDS_DIR/rePACT.md" \
-    "rePACT.md references worktree path" \
-    "worktree path"
+# Extract the Branch Behavior section documenting worktree path reception
+branch_behavior=$(sed -n '/^### Branch Behavior/,/^###\|^---$/p' "$COMMANDS_DIR/rePACT.md" | sed '$d')
+if echo "$branch_behavior" | grep -q "worktree path"; then
+    echo "  ✓ rePACT.md references worktree path in Branch Behavior section"
+    PASS=$((PASS + 1))
+else
+    echo "  ✗ rePACT.md references worktree path in Branch Behavior section: pattern not found"
+    FAIL=$((FAIL + 1))
+fi
 echo ""
 
 # --- 13. plan-mode.md does not reference worktree skills ---

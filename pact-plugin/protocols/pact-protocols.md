@@ -807,7 +807,7 @@ Invoke multiple specialists of the same type when:
 
 ### Pre-Invocation (Required)
 
-1. **Feature branch** — If on `main`/`master`, create feature branch first; if already on feature branch, proceed
+1. **Set up worktree** — If already in a worktree for this feature, reuse it. Otherwise, invoke `/PACT:worktree-setup` with the feature branch name. All subsequent work happens in the worktree.
 2. **S2 coordination** (if concurrent) — Check for file conflicts, assign boundaries
 
 ### S2 Light Coordination (for parallel comPACT)
@@ -834,9 +834,9 @@ Invoke multiple specialists of the same type when:
 2. **Run tests** — verify work passes. If tests fail → return to specialist for fixes before committing.
 3. **Create atomic commit(s)** — stage and commit before proceeding
 
-**Next steps** (user decides):
-- Done → work is committed
-- Review needed → `/PACT:peer-review`
+**Next steps** — After commit, ask: "Work committed. Create PR?"
+- Yes (Recommended) → invoke `/PACT:peer-review`
+- Not yet → worktree persists; user resumes later
 - More work → continue with comPACT or orchestrate
 
 **If blocker reported**:
