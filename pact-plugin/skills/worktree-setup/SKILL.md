@@ -37,9 +37,12 @@ git worktree list
 
 All worktrees live in `.worktrees/` relative to the repo root.
 
+Use `--git-common-dir` instead of `--show-toplevel` because the latter returns the worktree root when run inside a worktree (e.g., when ATOMIZE creates sub-scope worktrees from the feature worktree).
+
 ```bash
-# Get repo root
-REPO_ROOT=$(git rev-parse --show-toplevel)
+# Get main repo root (works correctly even from inside a worktree)
+MAIN_GIT_DIR=$(git rev-parse --git-common-dir)
+REPO_ROOT=$(dirname "$MAIN_GIT_DIR")
 
 # Create directory if needed
 mkdir -p "$REPO_ROOT/.worktrees"
@@ -51,7 +54,7 @@ The `.worktrees/` directory must not be tracked by git.
 
 ```bash
 # Check if .worktrees is already in .gitignore
-grep -q '\.worktrees' "$REPO_ROOT/.gitignore" 2>/dev/null
+grep -q '^\.worktrees' "$REPO_ROOT/.gitignore" 2>/dev/null
 ```
 
 If `.worktrees` is NOT in `.gitignore`:

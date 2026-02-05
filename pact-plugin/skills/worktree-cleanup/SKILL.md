@@ -40,17 +40,20 @@ Present the list and ask: "Which worktree should I remove?"
 
 Before removal, ensure the current working directory is NOT inside the worktree being removed. Switch to the main repo root.
 
+Use `--git-common-dir` instead of `--show-toplevel` because the latter returns the worktree root when run inside a worktree, not the main repo root.
+
 ```bash
-REPO_ROOT=$(git rev-parse --show-toplevel)
+MAIN_GIT_DIR=$(git rev-parse --git-common-dir)
+REPO_ROOT=$(dirname "$MAIN_GIT_DIR")
 cd "$REPO_ROOT"
 ```
 
-If the current working directory is inside the target worktree, navigate to the main repo root first. The main repo root is the worktree whose path does NOT contain `.worktrees/`.
+If the current working directory is inside the target worktree, navigate to the main repo root first.
 
 ### Step 3: Remove the Worktree
 
 ```bash
-git worktree remove .worktrees/{branch}
+git worktree remove "$REPO_ROOT/.worktrees/{branch}"
 ```
 
 **If removal fails** (uncommitted changes):
@@ -62,7 +65,7 @@ Surface this to the user:
 Cannot remove worktree — uncommitted changes exist in .worktrees/{branch}.
 Options:
   1. Commit or stash changes first, then retry cleanup
-  2. Force removal: git worktree remove --force .worktrees/{branch}
+  2. Force removal: git worktree remove --force "$REPO_ROOT/.worktrees/{branch}"
      (This discards uncommitted changes permanently)
 ```
 

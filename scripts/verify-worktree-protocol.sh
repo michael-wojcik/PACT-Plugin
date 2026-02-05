@@ -123,7 +123,7 @@ echo ""
 # --- 8. pact-scope-phases.md CONSOLIDATE references worktree-cleanup ---
 echo "8. pact-scope-phases.md CONSOLIDATE references worktree-cleanup:"
 # Extract CONSOLIDATE section and check for worktree-cleanup within it
-consolidate_section=$(sed -n '/^### CONSOLIDATE Phase/,/^### \|^---$/p' "$PROTOCOLS_DIR/pact-scope-phases.md" | sed '$d')
+consolidate_section=$(sed -nE '/^### CONSOLIDATE Phase/,/^### |^---$/p' "$PROTOCOLS_DIR/pact-scope-phases.md" | sed '$d')
 if echo "$consolidate_section" | grep -q "worktree-cleanup"; then
     echo "  ✓ CONSOLIDATE phase references worktree-cleanup"
     PASS=$((PASS + 1))
