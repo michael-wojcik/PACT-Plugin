@@ -31,6 +31,7 @@ git worktree list
 ```
 
 - If a worktree for the target branch already exists, **reuse it**. Report: "Reusing existing worktree at {path}" and skip to Step 6.
+  - If the worktree appears in the list but is marked **prunable**, run `git worktree prune` first and proceed to create a new one.
 - If the branch exists but has no worktree, ask the user: "Branch `{branch}` already exists. Check out existing branch, or create a new branch name?"
 
 ### Step 2: Ensure `.worktrees/` Directory
@@ -42,7 +43,7 @@ Use `--git-common-dir` instead of `--show-toplevel` because the latter returns t
 ```bash
 # Get main repo root (works correctly even from inside a worktree)
 MAIN_GIT_DIR=$(git rev-parse --git-common-dir)
-REPO_ROOT=$(dirname "$MAIN_GIT_DIR")
+REPO_ROOT=$(cd "$(dirname "$MAIN_GIT_DIR")" && pwd)
 
 # Create directory if needed
 mkdir -p "$REPO_ROOT/.worktrees"
@@ -54,7 +55,7 @@ The `.worktrees/` directory must not be tracked by git.
 
 ```bash
 # Check if .worktrees is already in .gitignore
-grep -q '^\.worktrees' "$REPO_ROOT/.gitignore" 2>/dev/null
+grep -q '\.worktrees' "$REPO_ROOT/.gitignore" 2>/dev/null
 ```
 
 If `.worktrees` is NOT in `.gitignore`:
@@ -95,17 +96,17 @@ If none of these files exist, skip this step (no dependencies to install).
 
 ### Step 6: Verify Clean Baseline
 
-Run the project's test suite to ensure the worktree starts from a clean state.
+Verify the worktree starts clean by running a build check (e.g., `npm run build`, `cargo check`). A full test suite run is optional — it provides stronger assurance but adds latency, especially for sub-scope worktrees.
 
 ```bash
 cd "$REPO_ROOT/.worktrees/{branch}"
 ```
 
-Use the project's standard test command (e.g., `npm test`, `cargo test`, `pytest`, `go test ./...`). Choose based on the same dependency file detected in Step 5.
+Use the project's standard build or check command. Choose based on the same dependency file detected in Step 5.
 
-**If tests pass**: Continue to Step 7.
+**If the check passes**: Continue to Step 7.
 
-**If tests fail**: Report the failures to the user and ask: "Tests are failing in the new worktree. This likely means tests also fail on the base branch. Proceed anyway, or investigate first?"
+**If it fails**: Report the failures to the user and ask: "Build is failing in the new worktree. This likely means it also fails on the base branch. Proceed anyway, or investigate first?"
 
 ### Step 7: Report
 
@@ -121,10 +122,11 @@ Tests: passing (or: failing — user chose to proceed)
 
 ## Output
 
-The worktree absolute path. This path is used by:
-- The orchestrator to direct agents to the correct working directory
-- ATOMIZE to track sub-scope worktree locations
-- Subsequent phases operating within this worktree
+The orchestrator captures the worktree path from the Step 7 report line:
+
+> Worktree ready at `{absolute_path}`
+
+Store this as `worktree_path` for the current workflow. Pass it to all specialist agent prompts and to rePACT for sub-scope work.
 
 ## Edge Cases
 

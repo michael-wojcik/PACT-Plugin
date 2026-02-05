@@ -392,7 +392,7 @@ Before concurrent dispatch, check internally: shared files? shared interfaces? c
 
 **Include in prompts for concurrent specialists**: "You are working concurrently with other specialists. Your scope is [files]. Do not modify files outside your scope."
 
-**Include worktree path in all agent prompts**: "You are working in a git worktree at `{worktree_path}`. All file paths must be absolute and within this worktree."
+**Include worktree path in all agent prompts**: "You are working in a git worktree at [worktree_path]. All file paths must be absolute and within this worktree."
 
 **Invoke coder(s) with**:
 - Task description

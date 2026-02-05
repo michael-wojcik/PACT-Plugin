@@ -44,7 +44,7 @@ Use `--git-common-dir` instead of `--show-toplevel` because the latter returns t
 
 ```bash
 MAIN_GIT_DIR=$(git rev-parse --git-common-dir)
-REPO_ROOT=$(dirname "$MAIN_GIT_DIR")
+REPO_ROOT=$(cd "$(dirname "$MAIN_GIT_DIR")" && pwd)
 cd "$REPO_ROOT"
 ```
 
