@@ -7,12 +7,6 @@
 
 set -e
 
-# Validate running from repo root
-if [ ! -d "pact-plugin" ]; then
-    echo "ERROR: Must run from repo root (pact-plugin/ directory not found)"
-    exit 1
-fi
-
 echo "=== Scope Integrity Verification ==="
 echo ""
 

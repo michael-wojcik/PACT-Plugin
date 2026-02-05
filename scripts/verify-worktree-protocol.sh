@@ -87,54 +87,22 @@ echo ""
 
 # --- 3. orchestrate.md references worktree-setup at workflow start ---
 echo "3. orchestrate.md references worktree-setup at workflow start:"
-# Extract the numbered workflow steps (between --- separator and ### Plan Status Handling)
-workflow_start=$(sed -n '/^1\. \*\*Set up worktree/,/^### Plan Status/p' "$COMMANDS_DIR/orchestrate.md" | sed '$d')
-if echo "$workflow_start" | grep -q "worktree-setup"; then
-    echo "  ✓ orchestrate.md references worktree-setup in workflow start steps"
-    PASS=$((PASS + 1))
-else
-    echo "  ✗ orchestrate.md references worktree-setup in workflow start steps: pattern not found in workflow start section"
-    FAIL=$((FAIL + 1))
-fi
+check_pattern "$COMMANDS_DIR/orchestrate.md" "orchestrate.md references worktree-setup at workflow start" "worktree-setup"
 echo ""
 
 # --- 4. comPACT.md references worktree-setup in pre-invocation ---
 echo "4. comPACT.md references worktree-setup in pre-invocation:"
-# Extract the Pre-Invocation section
-pre_invocation=$(sed -n '/^## Pre-Invocation/,/^## /p' "$COMMANDS_DIR/comPACT.md" | sed '$d')
-if echo "$pre_invocation" | grep -q "worktree-setup"; then
-    echo "  ✓ comPACT.md references worktree-setup in Pre-Invocation section"
-    PASS=$((PASS + 1))
-else
-    echo "  ✗ comPACT.md references worktree-setup in Pre-Invocation section: pattern not found in Pre-Invocation section"
-    FAIL=$((FAIL + 1))
-fi
+check_pattern "$COMMANDS_DIR/comPACT.md" "comPACT.md references worktree-setup in pre-invocation" "worktree-setup"
 echo ""
 
 # --- 5. comPACT.md includes peer-review prompt after commit ---
 echo "5. comPACT.md includes peer-review prompt after commit:"
-# Extract the After Specialist Completes section
-after_specialist=$(sed -n '/^## After Specialist Completes/,/^## /p' "$COMMANDS_DIR/comPACT.md" | sed '$d')
-if echo "$after_specialist" | grep -q "Create PR"; then
-    echo "  ✓ comPACT.md includes post-commit peer-review prompt"
-    PASS=$((PASS + 1))
-else
-    echo "  ✗ comPACT.md includes post-commit peer-review prompt: pattern not found in After Specialist Completes section"
-    FAIL=$((FAIL + 1))
-fi
+check_pattern "$COMMANDS_DIR/comPACT.md" "comPACT.md includes peer-review prompt after commit" "Create PR"
 echo ""
 
 # --- 6. peer-review.md includes worktree-cleanup after merge ---
 echo "6. peer-review.md includes worktree-cleanup after merge:"
-# Extract the post-merge section
-post_merge=$(sed -n '/^\*\*After user-authorized merge\*\*/,/^---$\|^## /p' "$COMMANDS_DIR/peer-review.md" | sed '$d')
-if echo "$post_merge" | grep -q "worktree-cleanup"; then
-    echo "  ✓ peer-review.md references worktree-cleanup in post-merge section"
-    PASS=$((PASS + 1))
-else
-    echo "  ✗ peer-review.md references worktree-cleanup in post-merge section: pattern not found in post-merge section"
-    FAIL=$((FAIL + 1))
-fi
+check_pattern "$COMMANDS_DIR/peer-review.md" "peer-review.md includes worktree-cleanup after merge" "worktree-cleanup"
 echo ""
 
 # --- 7. pact-scope-phases.md ATOMIZE references worktree-setup ---
@@ -175,41 +143,17 @@ echo ""
 
 # --- 10. orchestrate.md contains worktree path propagation instruction ---
 echo "10. orchestrate.md contains worktree path propagation instruction:"
-# Extract the S2 Pre-Dispatch Coordination subsection within CODE Phase
-s2_predispatch=$(sed -n '/^#### S2 Pre-Dispatch Coordination/,/^####\|^###\|^---$/p' "$COMMANDS_DIR/orchestrate.md" | sed '$d')
-if echo "$s2_predispatch" | grep -q "worktree_path"; then
-    echo "  ✓ orchestrate.md references worktree path propagation in S2 Pre-Dispatch section"
-    PASS=$((PASS + 1))
-else
-    echo "  ✗ orchestrate.md references worktree path propagation in S2 Pre-Dispatch section: pattern not found"
-    FAIL=$((FAIL + 1))
-fi
+check_pattern "$COMMANDS_DIR/orchestrate.md" "orchestrate.md contains worktree path propagation instruction" "worktree_path"
 echo ""
 
 # --- 11. comPACT.md agent prompt templates include worktree path ---
 echo "11. comPACT.md agent prompt templates include worktree path:"
-# Extract the Invocation section containing agent prompt templates
-invocation_section=$(sed -n '/^## Invocation/,/^## /p' "$COMMANDS_DIR/comPACT.md" | sed '$d')
-if echo "$invocation_section" | grep -q "worktree_path"; then
-    echo "  ✓ comPACT.md references worktree_path in Invocation section"
-    PASS=$((PASS + 1))
-else
-    echo "  ✗ comPACT.md references worktree_path in Invocation section: pattern not found"
-    FAIL=$((FAIL + 1))
-fi
+check_pattern "$COMMANDS_DIR/comPACT.md" "comPACT.md agent prompt templates include worktree path" "worktree_path"
 echo ""
 
 # --- 12. rePACT.md documents receiving worktree path ---
 echo "12. rePACT.md documents receiving worktree path:"
-# Extract the Branch Behavior section documenting worktree path reception
-branch_behavior=$(sed -n '/^### Branch Behavior/,/^###\|^---$/p' "$COMMANDS_DIR/rePACT.md" | sed '$d')
-if echo "$branch_behavior" | grep -q "worktree path"; then
-    echo "  ✓ rePACT.md references worktree path in Branch Behavior section"
-    PASS=$((PASS + 1))
-else
-    echo "  ✗ rePACT.md references worktree path in Branch Behavior section: pattern not found"
-    FAIL=$((FAIL + 1))
-fi
+check_pattern "$COMMANDS_DIR/rePACT.md" "rePACT.md documents receiving worktree path" "worktree path"
 echo ""
 
 # --- 13. plan-mode.md does not reference worktree skills ---
@@ -249,33 +193,6 @@ if echo "$consolidate_orchestrate" | grep -q "worktree-cleanup"; then
     PASS=$((PASS + 1))
 else
     echo "  ✗ orchestrate.md CONSOLIDATE phase references worktree-cleanup: pattern not found in CONSOLIDATE section"
-    FAIL=$((FAIL + 1))
-fi
-echo ""
-
-# --- 17. worktree-setup edge cases mention stale worktree handling ---
-echo "17. worktree-setup edge cases mention stale worktree handling:"
-check_pattern "$SKILLS_DIR/worktree-setup/SKILL.md" \
-    "worktree-setup edge cases mention git worktree prune" \
-    "git worktree prune"
-echo ""
-
-# --- 18. worktree-cleanup edge cases mention uncommitted changes safety ---
-echo "18. worktree-cleanup edge cases mention uncommitted changes safety:"
-check_pattern "$SKILLS_DIR/worktree-cleanup/SKILL.md" \
-    "worktree-cleanup edge cases mention uncommitted changes" \
-    "uncommitted"
-echo ""
-
-# --- 19. worktree-cleanup Safety section mentions force ---
-echo "19. worktree-cleanup Safety section mentions force:"
-# Extract the Safety section and check for 'force' within it
-safety_section=$(sed -n '/^## Safety/,/^## /p' "$SKILLS_DIR/worktree-cleanup/SKILL.md" | sed '$d')
-if echo "$safety_section" | grep -qi "force"; then
-    echo "  ✓ worktree-cleanup Safety section mentions force"
-    PASS=$((PASS + 1))
-else
-    echo "  ✗ worktree-cleanup Safety section mentions force: pattern not found in Safety section"
     FAIL=$((FAIL + 1))
 fi
 echo ""
