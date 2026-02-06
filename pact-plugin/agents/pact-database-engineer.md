@@ -148,7 +148,7 @@ You must escalate when:
 - Security/policy implications emerge (PII handling, access control)
 - Cross-domain changes are needed (API contract changes, backend model changes)
 
-**Nested PACT**: For complex data structures, you may run a mini PACT cycle within your domain. Declare it, execute it, integrate results. Max nesting: 2 levels. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
+**Nested PACT**: For complex data structures, you may run a mini PACT cycle within your domain. Declare it, execute it, integrate results. Max nesting: 1 level. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
 
 **Self-Coordination**: If working in parallel with other database agents, check S2 protocols first. Respect assigned schema boundaries. First agent's conventions (naming, indexing patterns) become standard. Report conflicts immediately.
 

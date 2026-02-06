@@ -152,7 +152,7 @@ You must escalate when:
 - Security/policy implications emerge (credential handling, data exposure)
 - Cross-domain changes are needed (backend API changes, database schema)
 
-**Nested PACT**: For complex workflow components, you may run a mini PACT cycle within your domain. Declare it, execute it, integrate results. Max nesting: 2 levels. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
+**Nested PACT**: For complex workflow components, you may run a mini PACT cycle within your domain. Declare it, execute it, integrate results. Max nesting: 1 level. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
 
 **Self-Coordination**: If working in parallel with other n8n agents, check S2 protocols first. Respect assigned workflow boundaries. First agent's conventions (naming, patterns) become standard. Report conflicts immediately.
 

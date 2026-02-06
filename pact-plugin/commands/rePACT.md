@@ -120,18 +120,18 @@ This runs a mini-orchestration:
 
 ### Nesting Depth
 
-**Maximum nesting: 2 levels**
+**Maximum nesting: 1 level**
 
 ```
 /PACT:orchestrate (level 0)
-  └── /PACT:rePACT (level 1)
-        └── /PACT:rePACT (level 2) ← maximum
-              └── /PACT:rePACT ← NOT ALLOWED
+  └── /PACT:rePACT (level 1, max)
+        └── /PACT:rePACT ← NOT ALLOWED
 ```
 
+> **Design rationale**: V3 repurposed rePACT as the single-level executor for sub-scopes dispatched by ATOMIZE. Level 2 nesting is unreachable by design -- scope detection is bypassed within sub-scopes, so a sub-scope cannot trigger further decomposition.
+
 If you hit the nesting limit:
-- Simplify the sub-task
-- Use `/PACT:comPACT` for remaining work
+- Simplify the sub-task and use `/PACT:comPACT`
 - Or escalate to user for guidance
 
 ---
@@ -180,7 +180,7 @@ Branch behavior depends on whether rePACT is invoked with a scope contract:
 ### Phase 0: Assess
 
 Before starting, verify:
-1. **Nesting depth**: Are we within the 2-level limit?
+1. **Nesting depth**: Are we within the 1-level limit?
 2. **Scope appropriateness**: Is this truly a sub-task of the parent?
 3. **Domain determination**: Single-domain or multi-domain?
 
@@ -312,11 +312,10 @@ Then just run mini-code and mini-test.
 
 **If nesting limit exceeded:**
 ```
-⚠️ NESTING LIMIT: Cannot invoke rePACT at level 3.
+⚠️ NESTING LIMIT: Cannot invoke rePACT at level 2.
 Options:
 1. Simplify sub-task and use comPACT
-2. Complete current level before starting new nested cycle
-3. Escalate to user for guidance
+2. Escalate to user for guidance
 ```
 
 **If sub-task is actually top-level:**
