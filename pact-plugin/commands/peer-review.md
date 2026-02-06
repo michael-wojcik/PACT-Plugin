@@ -91,14 +91,14 @@ Select the domain coder based on PR focus:
 
 ### Reviewer Spawn Pattern
 
-Spawn all reviewers into the existing session team. Reviewers use `plan_mode_required` so they submit a review plan before analyzing.
+Spawn all reviewers into the existing session team. Reviewers use `mode="plan"` so they submit a review plan before analyzing.
 
 ```
 Task(
   subagent_type="pact-architect",
   team_name="{team}",
   name="architect-reviewer",
-  plan_mode_required=true,
+  mode="plan",
   prompt="..."
 )
 
@@ -106,7 +106,7 @@ Task(
   subagent_type="pact-test-engineer",
   team_name="{team}",
   name="test-reviewer",
-  plan_mode_required=true,
+  mode="plan",
   prompt="..."
 )
 
@@ -114,7 +114,7 @@ Task(
   subagent_type="{domain-coder}",
   team_name="{team}",
   name="{domain}-reviewer",
-  plan_mode_required=true,
+  mode="plan",
   prompt="..."
 )
 ```

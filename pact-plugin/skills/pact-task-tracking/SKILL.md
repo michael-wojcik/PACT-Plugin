@@ -171,7 +171,7 @@ Peer names are visible via TaskList (task owners) or your team configuration.
 
 ## Plan Approval Workflow
 
-When you are spawned with `plan_mode_required`, you must submit a plan before implementing.
+When you are spawned with `mode="plan"`, you must submit a plan before implementing.
 
 1. **Analyze your task**: Read relevant documentation, understand requirements, identify approach.
 2. **Create your plan**: Outline what you will do, in what order, and why.

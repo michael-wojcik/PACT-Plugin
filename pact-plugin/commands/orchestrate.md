@@ -49,7 +49,7 @@ For each phase execution:
 a. TaskUpdate: phase status = "in_progress"
 b. Analyze work needed (QDCL for CODE)
 c. TaskCreate: agent task(s) with owner="{teammate-name}"
-d. Spawn teammates (Task with team_name/name/plan_mode_required)
+d. Spawn teammates (Task with team_name/name/mode="plan")
 e. Review and approve teammate plans
 f. Monitor: teammates self-update tasks, send HANDOFFs via SendMessage
 g. Receive HANDOFFs, verify completeness

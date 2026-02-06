@@ -156,7 +156,7 @@ Task(
   team_name="{team}",
   name="{specialist-N}",
   prompt="...",
-  plan_mode_required=true
+  mode="plan"
 )
 ```
 
@@ -230,7 +230,7 @@ Task: [user's task description]
 
 ## Plan Approval
 
-All teammates are spawned with `plan_mode_required=true`. Before implementing, each teammate submits a plan for lead review.
+All teammates are spawned with `mode="plan"`. Before implementing, each teammate submits a plan for lead review.
 
 **Lead workflow**:
 1. Teammate submits plan via `ExitPlanMode`

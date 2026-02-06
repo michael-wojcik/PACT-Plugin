@@ -108,7 +108,6 @@ Task(
   team_name="{team}",
   name="preparer-consultant",
   mode="plan",
-  plan_mode_required=true,
   prompt="..."
 )
 
@@ -117,7 +116,6 @@ Task(
   team_name="{team}",
   name="architect-consultant",
   mode="plan",
-  plan_mode_required=true,
   prompt="..."
 )
 
@@ -126,7 +124,6 @@ Task(
   team_name="{team}",
   name="test-consultant",
   mode="plan",
-  plan_mode_required=true,
   prompt="..."
 )
 ```
@@ -138,7 +135,6 @@ Task(
   team_name="{team}",
   name="backend-consultant",
   mode="plan",
-  plan_mode_required=true,
   prompt="..."
 )
 ```
