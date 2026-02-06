@@ -807,7 +807,7 @@ Invoke multiple specialists of the same type when:
 
 ### Pre-Invocation (Required)
 
-1. **Feature branch** — If on `main`/`master`, create feature branch first; if already on feature branch, proceed
+1. **Set up worktree** — If already in a worktree for this feature, reuse it. Otherwise, invoke `/PACT:worktree-setup` with the feature branch name. All subsequent work happens in the worktree.
 2. **S2 coordination** (if concurrent) — Check for file conflicts, assign boundaries
 
 ### S2 Light Coordination (for parallel comPACT)
@@ -834,9 +834,9 @@ Invoke multiple specialists of the same type when:
 2. **Run tests** — verify work passes. If tests fail → return to specialist for fixes before committing.
 3. **Create atomic commit(s)** — stage and commit before proceeding
 
-**Next steps** (user decides):
-- Done → work is committed
-- Review needed → `/PACT:peer-review`
+**Next steps** — After commit, ask: "Work committed. Create PR?"
+- Yes (Recommended) → invoke `/PACT:peer-review`
+- Not yet → worktree persists; user resumes later. Clean up manually with `/PACT:worktree-cleanup` when done.
 - More work → continue with comPACT or orchestrate
 
 **If blocker reported**:
@@ -1454,7 +1454,11 @@ These mappings are noted for future reference. C5 does not depend on TeammateToo
 
 This phase dispatches sub-scopes for independent execution. Each sub-scope runs a full PACT cycle (Prepare → Architect → Code → Test) via rePACT.
 
-**Dispatch**: Invoke `/PACT:rePACT` for each sub-scope with its scope contract. Sub-scopes run concurrently (default) unless they share files. When generating scope contracts, ensure `shared_files` constraints are set per the generation process in [pact-scope-contract.md](pact-scope-contract.md) -- sibling scopes must not modify each other's owned files.
+**Worktree isolation**: Before dispatching sub-scopes, create an isolated worktree for each:
+1. Invoke `/PACT:worktree-setup` with suffix branch: `feature-X--{scope_id}`
+2. Pass the worktree path to the rePACT invocation so the sub-scope operates in its own filesystem
+
+**Dispatch**: Invoke `/PACT:rePACT` for each sub-scope with its scope contract and worktree path. Sub-scopes run concurrently (default) unless they share files. When generating scope contracts, ensure `shared_files` constraints are set per the generation process in [pact-scope-contract.md](pact-scope-contract.md) -- sibling scopes must not modify each other's owned files.
 
 **Sub-scope failure policy**: Sub-scope failure is isolated — sibling scopes continue independently. Individual scope failures route through `/PACT:imPACT` to the affected scope only. However, when a sub-scope emits HALT, the parent orchestrator stops ALL sub-scopes (consistent with algedonic protocol: "Stop ALL agents"). Preserve work-in-progress for all scopes. After HALT resolution, review interrupted scopes before resuming.
 
@@ -1471,6 +1475,11 @@ This phase dispatches sub-scopes for independent execution. Each sub-scope runs 
 **Skip criteria**: No decomposition occurred → Proceed to TEST phase.
 
 This phase verifies that independently-developed sub-scopes are compatible before comprehensive testing.
+
+**Merge sub-scope branches**: Before running contract verification, merge each sub-scope's work back:
+1. For each completed sub-scope, merge its suffix branch to the feature branch
+2. Invoke `/PACT:worktree-cleanup` for each sub-scope worktree
+3. Proceed to contract verification and integration tests (below) on the merged feature branch
 
 **Delegate in parallel**:
 - **`pact-architect`**: Verify cross-scope contract compatibility
