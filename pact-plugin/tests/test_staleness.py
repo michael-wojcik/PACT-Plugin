@@ -10,12 +10,15 @@ Tests cover:
 6. Under budget -- no warning
 7. Already-marked stale entries -- not double-marked
 8. Multiple entries with mixed staleness
+9. _estimate_tokens twin copy equivalence (staleness.py vs working_memory.py)
 """
 
+import inspect
 import os
 import re
 import subprocess
 import sys
+import textwrap
 from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch, MagicMock
@@ -24,6 +27,8 @@ import pytest
 
 # Add hooks directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent / "hooks"))
+# Add working_memory scripts directory to path for twin-copy equivalence test
+sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "pact-memory" / "scripts"))
 
 
 class TestCheckPinnedStaleness:
@@ -501,3 +506,109 @@ class TestStalenessModuleDirect:
         missing = tmp_path / "does_not_exist.md"
         result = check_pinned_staleness(claude_md_path=missing)
         assert result is None
+
+
+class TestEstimateTokensEquivalence:
+    """Verify _estimate_tokens is identical across its two twin copies.
+
+    Cross-package isolation (hooks/ vs skills/pact-memory/scripts/) prevents
+    direct imports between the two packages. The _estimate_tokens function is
+    intentionally duplicated as a "twin copy" with cross-reference comments in
+    each file. This test ensures the two copies stay in sync by comparing their
+    source code via inspect.getsource().
+
+    Twin locations:
+    - hooks/staleness.py: estimate_tokens() (public name, aliased as _estimate_tokens)
+    - skills/pact-memory/scripts/working_memory.py: _estimate_tokens() (private name)
+    """
+
+    def test_function_bodies_are_identical(self):
+        """The function body of _estimate_tokens must be identical in both files.
+
+        Uses inspect.getsource() to get the raw source of each function, then
+        strips docstrings and normalizes whitespace so that differences in
+        function name or docstring wording do not cause false failures. Only
+        the executable lines (the actual logic) are compared.
+        """
+        from staleness import estimate_tokens as staleness_fn
+        from working_memory import _estimate_tokens as working_memory_fn
+
+        staleness_source = inspect.getsource(staleness_fn)
+        working_memory_source = inspect.getsource(working_memory_fn)
+
+        staleness_body = self._extract_body(staleness_source)
+        working_memory_body = self._extract_body(working_memory_source)
+
+        assert staleness_body == working_memory_body, (
+            "Twin copies of _estimate_tokens have diverged.\n"
+            f"staleness.py body:\n{staleness_body}\n\n"
+            f"working_memory.py body:\n{working_memory_body}"
+        )
+
+    def test_both_use_word_count_times_1_3(self):
+        """Both copies must use the word_count * 1.3 formula."""
+        from staleness import estimate_tokens as staleness_fn
+        from working_memory import _estimate_tokens as working_memory_fn
+
+        staleness_source = inspect.getsource(staleness_fn)
+        working_memory_source = inspect.getsource(working_memory_fn)
+
+        for name, source in [("staleness.py", staleness_source),
+                             ("working_memory.py", working_memory_source)]:
+            assert "text.split()" in source, (
+                f"{name}: missing text.split() call"
+            )
+            assert "* 1.3" in source, (
+                f"{name}: missing * 1.3 multiplier"
+            )
+
+    def test_both_return_zero_for_empty(self):
+        """Both copies must return 0 for empty/falsy input."""
+        from staleness import estimate_tokens as staleness_fn
+        from working_memory import _estimate_tokens as working_memory_fn
+
+        assert staleness_fn("") == 0
+        assert working_memory_fn("") == 0
+        assert staleness_fn("") == working_memory_fn("")
+
+    def test_both_produce_same_result(self):
+        """Both copies must produce identical results for the same input."""
+        from staleness import estimate_tokens as staleness_fn
+        from working_memory import _estimate_tokens as working_memory_fn
+
+        test_inputs = [
+            "",
+            "hello",
+            "one two three four five six seven eight nine ten",
+            "word " * 100,
+        ]
+        for text in test_inputs:
+            assert staleness_fn(text) == working_memory_fn(text), (
+                f"Results differ for input: {text[:50]!r}..."
+            )
+
+    @staticmethod
+    def _extract_body(source: str) -> str:
+        """Extract the executable body of a function, stripping docstring and def line.
+
+        Removes the function signature line, any docstring (triple-quoted block),
+        and dedents the remaining lines to normalize indentation. This allows
+        comparison of the actual logic regardless of function name or doc content.
+        """
+        lines = source.split("\n")
+
+        # Skip the def line
+        body_lines = lines[1:]
+
+        # Join and dedent
+        body_text = textwrap.dedent("\n".join(body_lines)).strip()
+
+        # Remove docstring if present (triple double-quotes or triple single-quotes)
+        for quote in ['"""', "'''"]:
+            if body_text.startswith(quote):
+                end_idx = body_text.find(quote, len(quote))
+                if end_idx != -1:
+                    body_text = body_text[end_idx + len(quote):].strip()
+                break
+
+        return body_text
