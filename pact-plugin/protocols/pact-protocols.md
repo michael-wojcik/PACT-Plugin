@@ -566,7 +566,7 @@ When a sub-task is complex enough to warrant its own PACT treatment:
 4. **Report**: Include nested work in handoff to orchestrator
 
 **Constraints:**
-- **Nesting limit**: 2 levels maximum (prevent infinite recursion)
+- **Nesting limit**: 1 level maximum (prevent infinite recursion)
 - **Scope check**: Nested PACT must be within your domain; cross-domain needs escalate to orchestrator
 - **Documentation**: Nested cycles report via handoff to parent
 - **Algedonic signals**: Algedonic signals from nested cycles still go **directly to user**—they bypass both the nested orchestration AND the parent orchestrator. Viability threats don't wait for hierarchy.
@@ -1244,9 +1244,9 @@ When autonomous mode is not enabled, all detection-triggered decomposition uses 
 
 ### Bypass Rules
 
+- **Ongoing sub-scope execution** does not re-evaluate detection (no recursive detection within sub-scopes). Scoped sub-scopes cannot themselves trigger scope detection -- this bypass rule is the primary architectural mechanism; the 1-level nesting limit (see S1 Autonomy & Recursion constraints) serves as the safety net.
 - **comPACT** bypasses scope detection entirely — it is inherently single-domain
 - **Manual `/rePACT`** bypasses detection — user has already decided to decompose
-- **Ongoing sub-scope execution** does not re-evaluate detection (no recursive detection within sub-scopes). Scoped sub-scopes cannot themselves trigger scope detection -- recursive detection is prevented by the 2-level nesting limit (see S1 Autonomy & Recursion constraints) and this bypass rule.
 
 ### Evaluation Response
 
@@ -1404,7 +1404,7 @@ rePACT implements the executor interface as follows:
 | **Input: scope_contract** | Passed inline in the rePACT invocation prompt by the parent orchestrator |
 | **Input: feature_context** | Inherited from parent orchestration context (branch, requirements, architecture) |
 | **Input: branch** | Uses the current feature branch (no new branch created) |
-| **Input: nesting_depth** | Tracked via orchestrator context; enforced at 2-level maximum |
+| **Input: nesting_depth** | Tracked via orchestrator context; enforced at 1-level maximum |
 | **Output: handoff** | Standard 5-item handoff with Contract Fulfillment section appended (see rePACT After Completion) |
 | **Output: commits** | Code committed directly to the feature branch during Mini-Code phase |
 | **Output: status** | Always `completed`; non-happy-path uses metadata (`{"stalled": true, "reason": "..."}` or `{"blocked": true, "blocker_task": "..."}`) per task lifecycle conventions |

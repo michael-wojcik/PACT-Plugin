@@ -178,7 +178,7 @@ See: **Recursion**
 - A specialist can invoke nested PACT for complex sub-tasks
 - The same structure applies at every level
 
-**Nesting Limit**: 2 levels in PACT (to prevent infinite recursion)
+**Nesting Limit**: 1 level in PACT (to prevent infinite recursion)
 
 **Key Point**: Recursion means the same principles and structure apply at every scale—you don't need different management theories for different levels.
 

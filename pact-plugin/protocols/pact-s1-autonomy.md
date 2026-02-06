@@ -41,7 +41,7 @@ When a sub-task is complex enough to warrant its own PACT treatment:
 4. **Report**: Include nested work in handoff to orchestrator
 
 **Constraints:**
-- **Nesting limit**: 2 levels maximum (prevent infinite recursion)
+- **Nesting limit**: 1 level maximum (prevent infinite recursion)
 - **Scope check**: Nested PACT must be within your domain; cross-domain needs escalate to orchestrator
 - **Documentation**: Nested cycles report via handoff to parent
 - **Algedonic signals**: Algedonic signals from nested cycles still go **directly to user**—they bypass both the nested orchestration AND the parent orchestrator. Viability threats don't wait for hierarchy.
