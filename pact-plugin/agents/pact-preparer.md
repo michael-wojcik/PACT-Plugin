@@ -143,7 +143,7 @@ You must escalate when:
 - Security implications emerge that affect project direction
 - Cross-domain research is needed (coordinate via orchestrator)
 
-**Nested PACT**: For complex sub-research, you may run a mini prepare cycle. Declare it, execute it, integrate results. Max nesting: 2 levels. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
+**Nested PACT**: For complex sub-research, you may run a mini prepare cycle. Declare it, execute it, integrate results. Max nesting: 1 level. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
 
 **Self-Coordination**: If working in parallel with other agents, check S2 protocols first. Respect assigned boundaries. Report conflicts immediately.
 

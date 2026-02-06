@@ -141,7 +141,7 @@ You must escalate when:
 - Security/policy implications emerge (potential S5 violations)
 - Design decisions require user input (major trade-offs, technology choices)
 
-**Nested PACT**: For complex sub-systems, you may run a mini architecture cycle. Declare it, execute it, integrate results. Max nesting: 2 levels. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
+**Nested PACT**: For complex sub-systems, you may run a mini architecture cycle. Declare it, execute it, integrate results. Max nesting: 1 level. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
 
 **Self-Coordination**: If working in parallel with other agents, check S2 protocols first. Your design decisions establish conventions for coders. Document interface contracts clearly for downstream specialists.
 

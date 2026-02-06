@@ -252,7 +252,7 @@ You must escalate when:
 - Security/policy implications emerge (vulnerabilities discovered during testing)
 - Cross-domain issues found (bugs that span frontend/backend/database)
 
-**Nested PACT**: For complex test suites, you may run a mini PACT cycle within your domain. Declare it, execute it, integrate results. Max nesting: 2 levels. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
+**Nested PACT**: For complex test suites, you may run a mini PACT cycle within your domain. Declare it, execute it, integrate results. Max nesting: 1 level. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
 
 **Self-Coordination**: If working in parallel with other test agents, check S2 protocols first. Coordinate test data and fixtures. Respect assigned test scope boundaries. Report conflicts immediately.
 

@@ -141,7 +141,7 @@ You must escalate when:
 - No relevant memories found for critical recovery
 - User requests memory operations outside your scope
 
-**Nested PACT**: For complex memory operations (e.g., large-scale context recovery spanning multiple features), you may run a mini search-synthesize cycle. Declare it, execute it, integrate results. Max nesting: 2 levels. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
+**Nested PACT**: For complex memory operations (e.g., large-scale context recovery spanning multiple features), you may run a mini search-synthesize cycle. Declare it, execute it, integrate results. Max nesting: 1 level. See [pact-s1-autonomy.md](../protocols/pact-s1-autonomy.md) for S1 Autonomy & Recursion rules.
 
 **Algedonic Authority**: You can emit algedonic signals (HALT/ALERT) when you recognize viability threats during memory operations. You do not need orchestrator permission—emit immediately. Common memory triggers:
 - **ALERT META-BLOCK**: Critical context recovery failed, no memories found for active work
