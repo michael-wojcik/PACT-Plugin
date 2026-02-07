@@ -397,6 +397,19 @@ S2 manages information flow between agents:
 | Any agent | Orchestrator → All others | Resource claims, conflict warnings |
 | TaskList | All agents | Current in_progress work, blockers, completed decisions |
 
+### Peer Communication via SendMessage
+
+Teammates can communicate directly with each other using `SendMessage(type: "message", recipient: "{peer-name}")`. This enables lateral coordination without routing every interaction through the lead.
+
+**Use cases**:
+- **Convention sharing**: A teammate discovers a naming pattern and notifies peers working in the same domain
+- **Conflict warning**: A teammate realizes it needs to modify a file near another teammate's boundary
+- **Interface coordination**: Two teammates working on connected components align on shared types or contracts
+
+**Visibility**: The lead receives idle-notification summaries of peer messages, providing awareness of lateral communication without the overhead of being in the loop for every exchange.
+
+**Default flow**: Peer communication is optional. The standard coordination path remains teammate-to-lead via SendMessage. Use peer DMs when direct coordination is more efficient than round-tripping through the lead.
+
 ### Pre-Parallel Coordination Check
 
 Before invoking parallel agents, the orchestrator must:
@@ -848,6 +861,8 @@ Invoke multiple specialists of the same type when:
 2. Key decisions made
 3. What the next agent needs to know
 
+Teammates deliver handoffs via `SendMessage(type: "message", recipient: "team-lead")`.
+
 Keep it brief. No templates required.
 
 ---
@@ -1009,7 +1024,7 @@ Scope tasks are created during the ATOMIZE phase. Sub-scope teammates self-manag
 
 ### CODE → TEST Handoff
 
-Coders provide handoff summaries to the orchestrator, who passes them to the test engineer.
+Coders deliver handoff summaries via SendMessage to the team lead, who passes them to the test engineer.
 
 **Handoff Format**:
 ```

@@ -9,6 +9,7 @@ VSM-enhanced orchestration framework for AI-assisted software development with C
 
 - **Claude Code** CLI installed and configured
 - **Agent Teams** enabled (experimental feature). Enable via Claude Code settings before using PACT.
+- **Delegate Mode** (optional, recommended): Press Shift+Tab to enable Delegate Mode, which restricts the orchestrator to coordination-only tools. This adds platform-level enforcement on top of PACT's convention-based delegation rules.
 
 ## Installation
 
