@@ -163,10 +163,9 @@ def _append_team_context(lines: list[str]) -> None:
         if active_members:
             names = [m.get("name", "?") for m in active_members[:6]]
             lines.append(
-                f"Team: '{team_name}' ({len(active_members)} active teammate(s): "
-                f"{', '.join(names)}"
-                + (f", +{len(active_members)-6} more" if len(active_members) > 6 else "")
-                + ")"
+                f"Team '{team_name}': {len(active_members)} active teammate(s) "
+                f"({', '.join(names)})"
+                + (f" (+{len(active_members)-6} more)" if len(active_members) > 6 else "")
             )
             lines.append(
                 "Note: Teammates survived compaction and remain active. "

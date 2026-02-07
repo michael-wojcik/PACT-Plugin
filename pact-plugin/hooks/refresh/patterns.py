@@ -171,6 +171,8 @@ SUBAGENT_TYPE_PATTERN = re.compile(r'"subagent_type":\s*"([^"]+)"')
 # Agent Teams patterns (v3 teammate model)
 # Task calls with team_name parameter indicate Agent Teams usage
 TEAM_NAME_PATTERN = re.compile(r'"team_name":\s*"([^"]+)"')
+# Matches ANY JSON "name" field, not just teammate names. Only use in contexts
+# where the surrounding JSON is already identified as a Task() call.
 TEAMMATE_NAME_PATTERN = re.compile(r'"name":\s*"([^"]+)"')
 SEND_MESSAGE_PATTERN = re.compile(r'"name":\s*"SendMessage"', re.IGNORECASE)
 TEAM_CREATE_PATTERN = re.compile(r'"name":\s*"TeamCreate"', re.IGNORECASE)

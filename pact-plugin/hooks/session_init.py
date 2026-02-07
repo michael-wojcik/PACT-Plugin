@@ -404,6 +404,9 @@ def _team_instruction(source: str) -> str | None:
 
     team_name = derive_team_name(branch)
 
+    # team_exists() checks ~/.claude/teams/{name}/config.json, which is an
+    # assumed path. If Agent Teams uses a different storage path, this check
+    # will always return False. The fallback is correct (idempotent TeamCreate).
     if source == "compact":
         # Team and teammates survive compaction (empirically verified).
         # Just remind the orchestrator of the existing team name.
