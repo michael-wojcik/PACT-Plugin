@@ -9,9 +9,6 @@ extracting tunable numeric values here for maintainability.
 
 STEP_DESCRIPTIONS and PROSE_CONTEXT_TEMPLATES are imported from
 shared_constants.py to eliminate code duplication with compaction_refresh.py.
-
-Agent Teams constants are used by patterns.py for detecting v3 team-based
-workflow patterns in transcripts.
 """
 
 # Import shared constants for re-export
@@ -54,24 +51,6 @@ CHECKPOINT_VERSION = "1.0"
 
 # Checkpoint file expiration in days (Item 11)
 CHECKPOINT_MAX_AGE_DAYS = 7
-
-# === AGENT TEAMS CONSTANTS ===
-
-# Teammate naming convention: {role}-{number} (e.g., "backend-1", "architect-2")
-# For scoped orchestration: "scope-{scope}-{role}" (e.g., "scope-auth-backend")
-TEAMMATE_NAME_CONVENTION = r"^(?:scope-[\w-]+-)?(?:backend|frontend|database|test|architect|preparer|memory|n8n)-\d+$"
-
-# Agent Teams tool names for transcript pattern detection
-TEAM_TOOL_NAMES = frozenset({"TeamCreate", "TeamDelete", "SendMessage"})
-
-# SendMessage types used by PACT (for transcript parsing)
-SEND_MESSAGE_TYPES = frozenset({
-    "message",           # Direct teammate communication
-    "broadcast",         # Team-wide announcements (HALT signals)
-    "shutdown_request",  # Phase transition cleanup
-    "shutdown_response", # Teammate acknowledging shutdown
-    "plan_approval_response",  # Lead approving/rejecting teammate plans
-})
 
 # Note: STEP_DESCRIPTIONS and PROSE_CONTEXT_TEMPLATES are imported
 # from shared_constants.py at the top of this file.

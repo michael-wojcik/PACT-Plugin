@@ -134,6 +134,10 @@ def audit_team_state() -> list[str]:
 
     if messages:
         messages.insert(0, "Agent Teams still active (teammates are independent processes):")
+        messages.append(
+            "Agent Teams: Clean up team via TeamDelete. "
+            "Active teammates will be shut down."
+        )
 
     return messages
 

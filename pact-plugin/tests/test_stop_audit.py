@@ -268,12 +268,13 @@ class TestAuditTeamState:
 
         messages = audit_team_state()
 
-        assert len(messages) == 2  # header + team entry
+        assert len(messages) == 3  # header + team entry + TeamDelete instruction
         assert "Agent Teams still active" in messages[0]
         assert "v3-agent-teams" in messages[1]
         assert "2 active teammate(s)" in messages[1]
         assert "backend-1" in messages[1]
         assert "architect-1" in messages[1]
+        assert "TeamDelete" in messages[2]
 
     def test_team_with_no_active_members(self, tmp_path, monkeypatch):
         """Test reports team with no active members differently."""
@@ -306,8 +307,9 @@ class TestAuditTeamState:
 
         # get_team_members returns [] for missing members key
         # audit_team_state enters the "else" branch: "no members found"
-        assert len(messages) == 2  # header + message
+        assert len(messages) == 3  # header + message + TeamDelete instruction
         assert "no members found" in messages[1]
+        assert "TeamDelete" in messages[2]
 
     def test_team_with_no_config_file(self, tmp_path, monkeypatch):
         """Test handles team directory without config.json."""
@@ -321,8 +323,9 @@ class TestAuditTeamState:
 
         # get_team_members returns [] (no config file)
         # audit_team_state enters "else" branch: "no members found"
-        assert len(messages) == 2
+        assert len(messages) == 3  # header + message + TeamDelete instruction
         assert "no members found" in messages[1]
+        assert "TeamDelete" in messages[2]
 
     def test_multiple_teams(self, tmp_path, monkeypatch):
         """Test reports multiple active teams."""
@@ -340,11 +343,12 @@ class TestAuditTeamState:
 
         messages = audit_team_state()
 
-        # header + 2 team entries
-        assert len(messages) == 3
+        # header + 2 team entries + TeamDelete instruction
+        assert len(messages) == 4
         assert "Agent Teams still active" in messages[0]
         team_entries = [m for m in messages[1:] if "Team '" in m]
         assert len(team_entries) == 2
+        assert "TeamDelete" in messages[-1]
 
     def test_truncates_many_active_members(self, tmp_path, monkeypatch):
         """Test truncates member list at 5 with '+N more' suffix."""

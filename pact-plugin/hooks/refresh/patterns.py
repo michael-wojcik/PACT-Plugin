@@ -10,7 +10,6 @@ Configuration constants are imported from constants.py for maintainability.
 
 import re
 from dataclasses import dataclass
-from typing import Pattern
 
 # Import configuration constants from centralized location (Item 12)
 from .constants import (
@@ -60,11 +59,11 @@ class WorkflowPattern:
     """Pattern definition for a single PACT workflow type."""
 
     name: str
-    trigger_pattern: Pattern[str]
+    trigger_pattern: re.Pattern[str]
     step_markers: list[str]
     termination_signals: list[str]
     # Optional: patterns for extracting workflow-specific context
-    context_extractors: dict[str, Pattern[str]]
+    context_extractors: dict[str, re.Pattern[str]]
 
 
 # Workflow trigger patterns (match user messages that start workflows)
