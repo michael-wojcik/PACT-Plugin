@@ -256,6 +256,8 @@ Explicit user override ("you code this, don't delegate") should be honored; casu
 
 **If in doubt, delegate!**
 
+> **Trivial task exception**: Tasks requiring fewer than ~3 tool calls that don't involve application code (e.g., `gh issue create`, `git push`, `git tag`) should be handled by the orchestrator directly. The overhead of spawning an agent exceeds the task itself. This does **NOT** override "never write application code" — it covers non-code operational tasks only.
+
 #### Invoke Multiple Specialists Concurrently
 
 > ⚠️ **DEFAULT TO CONCURRENT**: When delegating, dispatch multiple specialists together in a single response unless tasks share files or have explicit dependencies. This is not optional—it's the expected mode of orchestration.
@@ -366,6 +368,23 @@ When delegating a task, these specialist agents are available to execute PACT ph
 - Communication via SendMessage (HANDOFFs, blockers, algedonic signals)
 - Completed-phase teammates remain as consultants for questions
 - Multiple specialists run concurrently within the same team
+
+#### Reuse vs. Spawn Decision
+
+| Situation | Action |
+|-----------|--------|
+| Idle agent has relevant context (same files/domain) | `SendMessage` to reassign |
+| Idle agent exists, but unrelated prior context | Spawn new (fresh context is cleaner) |
+| Need parallel work + idle agent is single-threaded | Spawn new for parallelism |
+| Agent's context near capacity from prior work | Spawn new |
+| Reviewer found issues → now needs fixer | Reuse the reviewer (they know the problem best) |
+
+**Default**: Prefer reuse when domain + context overlap. When reusing, prompt minimally — just the delta (e.g., `"Follow-up task: {X}. You already have context from {Y}."`).
+
+#### Agent Shutdown Guidance
+
+- **Shut down when done**: Once an agent's task is complete and no follow-up is expected, shut down via `SendMessage(type="shutdown_request")`
+- **Keep alive when needed**: If upcoming work may need the agent's context (e.g., remediation from their review, follow-up in their domain), keep them until that work completes
 
 **Exception — `pact-memory-agent`**: This agent is NOT a team member. It still uses the background task model:
 ```python
