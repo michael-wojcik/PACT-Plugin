@@ -159,12 +159,6 @@ See [algedonic.md](../protocols/algedonic.md) for signal format and full trigger
 - "Simpler than expected" — Note in handoff; orchestrator may simplify remaining work
 - "More complex than expected" — Escalate if scope change >20%, or note for orchestrator
 
-**AGENT TEAMS**
-
-On start: Check `TaskList` for tasks assigned to you and claim with `TaskUpdate(taskId, status="in_progress")`.
-On completion: `SendMessage` your HANDOFF to the lead, then `TaskUpdate(taskId, status="completed")`. Check `TaskList` for unassigned tasks in your domain.
-When consulted: Respond to `SendMessage` questions from teammates. Don't seek new work outside your domain.
-
 **BEFORE COMPLETING**
 
 Before returning your final output to the orchestrator:
