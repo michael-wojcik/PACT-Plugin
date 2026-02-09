@@ -1,9 +1,19 @@
 # PACT Framework Plugin
 
-> **Version**: 2.0.0
+> **Version**: 3.0.2
 > **License**: MIT
 
 VSM-enhanced orchestration framework for AI-assisted software development with Claude Code.
+
+> **Breaking change in v3.0:** PACT now uses [Agent Teams](https://code.claude.com/docs/en/agent-teams) instead of subagents. You must enable Agent Teams in your `settings.json` before using this plugin:
+> ```json
+> {
+>   "env": {
+>     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+>   }
+> }
+> ```
+> Agent Teams are experimental and disabled by default in Claude Code. See the [main README](https://github.com/ProfSynapse/PACT-prompt#upgrading-from-v2x-to-v30) for full upgrade instructions.
 
 ## Installation
 
@@ -81,7 +91,13 @@ After installing this plugin, use these commands:
 /PACT:plan-mode <task>        # Strategic planning before implementation
 ```
 
-## Key Features (v2.0)
+## What's New in v3.0+
+
+- **Agent Teams**: Specialists run as coordinated Claude Code instances with shared tasks and direct messaging (replaces subagent model)
+- **Agent Lifecycle Management**: Reuse-vs-spawn decisions, reviewer-to-fixer pipelines, graceful shutdown
+- **Persistent Teammates**: Completed-phase agents remain available as consultants for follow-up questions
+
+## Key Features (v2.0+)
 
 - **Variety Management**: Tasks scored on complexity; ceremony scales accordingly
 - **Viability Sensing**: Agents emit HALT/ALERT signals for security, data, ethics issues

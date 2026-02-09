@@ -190,7 +190,7 @@ Skills provide specialized knowledge that loads on-demand:
 
 ---
 
-## Memory System (New!)
+## Memory System
 
 PACT includes a persistent memory system for cross-session learning:
 
@@ -231,7 +231,7 @@ When installed as a plugin, PACT lives in your plugin cache:
 │   └── cache/
 │       └── pact-marketplace/
 │           └── PACT/
-│               └── 2.0.0/      # Plugin version
+│               └── 3.0.2/      # Plugin version
 │                   ├── agents/
 │                   ├── commands/
 │                   ├── skills/
@@ -353,8 +353,27 @@ Act as PACT Orchestrator...
 ## Requirements
 
 - **Claude Code** (the CLI tool): `npm install -g @anthropic-ai/claude-code`
+- **Agent Teams enabled** (see [Enabling Agent Teams](#enabling-agent-teams) below)
 - **Python 3.9+** (for memory system and hooks)
 - **macOS or Linux** (Windows support coming soon)
+
+### Enabling Agent Teams
+
+> **Required since PACT v3.0.** PACT's specialist agents now run as an Agent Team — a coordinated group of Claude Code instances with shared tasks and inter-agent messaging. Agent Teams are experimental in Claude Code and **disabled by default**.
+
+Add the following to your `settings.json` (global `~/.claude/settings.json` or project-level `.claude/settings.json`):
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+Without this setting, PACT commands like `/PACT:orchestrate` and `/PACT:comPACT` will fail to spawn specialist agents.
+
+> **Note:** Agent Teams have [known limitations](https://code.claude.com/docs/en/agent-teams#limitations) around session resumption, task coordination, and shutdown behavior. See the Claude Code docs for details.
 
 ### Optional Dependencies
 
@@ -404,6 +423,34 @@ Claude: [S4 Intelligence Mode] Consulting specialists...
 
 Plan saved to docs/plans/api-caching-plan.md
 ```
+
+---
+
+## Upgrading from v2.x to v3.0
+
+PACT v3.0 is a **breaking change**. The agent execution model migrated from subagents to **Agent Teams** — a flat team of coordinated Claude Code instances with shared task lists and direct inter-agent messaging.
+
+### What changed
+
+| Aspect | v2.x (Subagents) | v3.0 (Agent Teams) |
+|--------|-------------------|---------------------|
+| **Execution model** | Subagents within a single session | Independent Claude Code instances per specialist |
+| **Communication** | Results returned to orchestrator only | Teammates message each other directly |
+| **Task tracking** | Orchestrator-managed | Shared task list with self-coordination |
+| **Lifecycle** | Ephemeral (one task, then gone) | Persistent (remain as consultants after their phase) |
+
+### What you need to do
+
+1. **Enable Agent Teams** in your `settings.json` (see [Enabling Agent Teams](#enabling-agent-teams))
+2. **Update CLAUDE.md**: Re-copy the orchestrator config from the plugin — the orchestration instructions changed significantly
+   ```bash
+   # Back up your existing CLAUDE.md first
+   cp ~/.claude/CLAUDE.md ~/.claude/CLAUDE.md.bak
+   # Then re-copy from the updated plugin
+   cp ~/.claude/plugins/cache/pact-marketplace/PACT/*/CLAUDE.md ~/.claude/CLAUDE.md
+   ```
+   If you have custom content in `~/.claude/CLAUDE.md`, manually merge the updated PACT section (between `<!-- PACT_START -->` and `<!-- PACT_END -->` markers) instead of overwriting.
+3. **Restart Claude Code**
 
 ---
 
