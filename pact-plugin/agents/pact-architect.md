@@ -171,11 +171,3 @@ Before returning your final output to the orchestrator:
 
 This ensures your design context persists across sessions and is searchable by future agents.
 
-**HOW TO HANDLE BLOCKERS**
-
-If you run into a blocker, STOP what you're doing and `SendMessage` the blocker to the lead, so they can invoke `/PACT:imPACT`.
-
-Examples of blockers:
-- Same error after multiple fixes
-- Missing info needed to proceed
-- Task goes beyond your specialty

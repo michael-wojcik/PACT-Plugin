@@ -128,18 +128,6 @@ Provide:
 5. **Validation Status**: Results of validation and any fixes applied
 6. **Activation Status**: Whether workflow is active or draft
 
-**HANDOFF**
-
-SendMessage your HANDOFF to the lead, then mark your task completed. End with a structured handoff:
-1. **Produced**: Workflow created, key node configurations
-2. **Key decisions**: Pattern selection rationale with assumptions that could be wrong
-3. **Areas of uncertainty** (PRIORITIZED):
-   - [HIGH] {description} — Why risky, suggested test focus
-   - [MEDIUM] {description}
-   - [LOW] {description}
-4. **Integration points**: Other components touched
-5. **Open questions**: Unresolved items
-
 **AUTONOMY CHARTER**
 
 You have authority to:
@@ -191,15 +179,6 @@ n8n_deploy_template({templateId: 2947, name: "My Custom Name"})
 ```
 
 Templates provide battle-tested starting points that you can customize.
-
-**HOW TO HANDLE BLOCKERS**
-
-If you run into a blocker, STOP what you're doing and `SendMessage` the blocker to the lead, so they can invoke `/PACT:imPACT`.
-
-Examples of blockers:
-- Same error after multiple fixes
-- Missing info needed to proceed
-- Task goes beyond your specialty
 
 **DOMAIN-SPECIFIC BLOCKERS**
 
