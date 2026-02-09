@@ -1,12 +1,12 @@
 ## Scope Detection
 
-> **Purpose**: Detect multi-scope tasks during orchestration so the orchestrator can propose
+> **Purpose**: Detect multi-scope tasks during orchestration so the lead can propose
 > decomposition before committing to a single-scope execution plan.
 > Evaluated after PREPARE phase output is available, before ARCHITECT phase begins.
 
 ### Detection Heuristics
 
-The orchestrator evaluates PREPARE output against these heuristic signals to determine whether a task warrants decomposition into sub-scopes.
+The lead evaluates PREPARE output against these heuristic signals to determine whether a task warrants decomposition into sub-scopes.
 
 | Signal | Strength | Description |
 |--------|----------|-------------|
@@ -47,15 +47,15 @@ The threshold and point values are tunable. Adjust based on observed false-posit
 | Backend + frontend + DB migration, no shared models | Distinct domain boundaries (2) + Non-overlapping work areas (2) + High specialist count (1) | — | 5 | All strong signals fire — autonomous tier eligible |
 | API change + UI tweak, shared types | Distinct domain boundaries (2) | Small total scope (-1) + Shared data models (-1) | 0 | Below threshold — single scope |
 
-A score of 0 means counter-signals outweighed detection signals, not that no signals were observed. The orchestrator still noted the signals — they were simply insufficient to warrant decomposition.
+A score of 0 means counter-signals outweighed detection signals, not that no signals were observed. The lead still noted the signals — they were simply insufficient to warrant decomposition.
 
 ### Activation Tiers
 
 | Tier | Trigger | Behavior |
 |------|---------|----------|
 | **Manual** | User invokes `/rePACT` explicitly | Always available — bypasses detection entirely |
-| **Confirmed** (default) | Score >= threshold | Orchestrator proposes decomposition via S5 decision framing; user confirms, rejects, or adjusts boundaries |
-| **Autonomous** | ALL strong signals fire (Distinct domain boundaries + Non-overlapping work areas) AND no counter-signals AND autonomous mode enabled | Orchestrator auto-decomposes without user confirmation |
+| **Confirmed** (default) | Score >= threshold | Lead proposes decomposition via S5 decision framing; user confirms, rejects, or adjusts boundaries |
+| **Autonomous** | ALL strong signals fire (Distinct domain boundaries + Non-overlapping work areas) AND no counter-signals AND autonomous mode enabled | Lead auto-decomposes without user confirmation |
 
 **Autonomous mode** is opt-in. Enable by adding to `CLAUDE.md`:
 
@@ -69,7 +69,7 @@ When autonomous mode is not enabled, all detection-triggered decomposition uses 
 
 1. **PREPARE** phase runs in single scope (always — research output is needed to evaluate signals)
 2. If PREPARE was skipped but an approved plan exists, evaluate the plan's Preparation section content against the same heuristics. If neither PREPARE output nor plan content is available, skip detection entirely (proceed single-scope).
-3. Orchestrator evaluates PREPARE output (or plan content) against heuristics
+3. Lead evaluates PREPARE output (or plan content) against heuristics
 4. Score **below threshold** → proceed with single-scope execution (today's default behavior)
 5. Score **at or above threshold** → activate the appropriate tier (Confirmed or Autonomous)
 
@@ -81,7 +81,7 @@ When autonomous mode is not enabled, all detection-triggered decomposition uses 
 
 ### Evaluation Response
 
-When detection fires (score >= threshold), the orchestrator must present the result to the user using S5 Decision Framing.
+When detection fires (score >= threshold), the lead must present the result to the user using S5 Decision Framing.
 
 #### S5 Confirmation Flow
 
@@ -127,6 +127,6 @@ When **all** of the following conditions are true, skip user confirmation and pr
 
 ### Post-Detection: Scope Contract Generation
 
-When decomposition is confirmed (by user or autonomous tier), the orchestrator generates a scope contract for each identified sub-scope before dispatching to the executor. See [pact-scope-contract.md](pact-scope-contract.md) for the contract format, generation process, and executor interface.
+When decomposition is confirmed (by user or autonomous tier), the lead generates a scope contract for each identified sub-scope before dispatching to the executor. See [pact-scope-contract.md](pact-scope-contract.md) for the contract format, generation process, and executor interface.
 
 ---

@@ -38,7 +38,7 @@ Outer PREPARE → Outer ARCHITECT (includes decomposition) → Outer CODE:
 
 ### Step 2: Contract Fulfillment Verification
 
-**Who**: Lead (orchestrator-level metadata comparison).
+**Who**: Lead (lead-level metadata comparison).
 
 **Task**: Compare each scope's `contract_fulfillment` metadata against original contracts:
 - For each scope: are all deliverables marked ✅?

@@ -56,7 +56,7 @@ At phase transitions, briefly assess:
 - "Has variety decreased?" → Consider simplifying (skip phases, fewer agents)
 - "Are we matched?" → Continue as planned
 
-**Who performs checkpoints**: Orchestrator, at S4 mode transitions (between phases).
+**Who performs checkpoints**: Lead, at S4 mode transitions (between phases).
 
 ---
 

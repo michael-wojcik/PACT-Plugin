@@ -281,7 +281,7 @@ Explicit user override ("you code this, don't delegate") should be honored; casu
 |-------|-----------|------------|
 | **Feature** | Feature task | `worktree_path`, `feature_branch`, `plan_path`, `plan_status`, `nesting_depth`, `impact_cycles` |
 | **Phase** | Phase tasks | `phase`, `skipped`, `skip_reason`, `s4_checkpoint` |
-| **Agent** | Agent work tasks | `coordination` (file_scope, convention_source, concurrent_with, boundary_note), `upstream_tasks`, `artifact_paths` |
+| **Agent** | Agent work tasks | `assigner`, `coordination` (file_scope, convention_source, concurrent_with, boundary_note), `upstream_tasks`, `artifact_paths` |
 | **Scope** | Scope sub-feature tasks | `scope_id`, `contract_fulfillment` |
 | **Review** | Review task | `pr_url`, `remediation_cycles`, `findings_path` |
 
@@ -378,9 +378,10 @@ PACT uses Claude Code Agent Teams for specialist execution. The lead orchestrato
      name="backend-coder-1",
      team_name="{feature-slug}",
      prompt="You are a pact-backend-coder. You have been assigned task {task_id}.
-             Read it with TaskGet and execute it. When done, store your handoff
-             in task metadata via TaskUpdate and send a completion signal via
-             SendMessage to the lead."
+             Read it with TaskGet and execute it. Your assigner's name is in
+             metadata.assigner — use it as the SendMessage recipient. When done,
+             store your handoff in task metadata via TaskUpdate and send a
+             completion signal via SendMessage to your assigner."
    )
    ```
 
@@ -407,6 +408,7 @@ Tasks are the instruction set, not just tracking artifacts. A Task's description
 |-------|----------|
 | **subject** | Short imperative label (e.g., "Implement auth endpoint") |
 | **description** | Full mission: what to do, acceptance criteria, file scope, constraints |
+| **metadata.assigner** | Name of the teammate who assigned this task (for SendMessage recipient targeting) |
 | **metadata.phase** | Which PACT phase (PREPARE, ARCHITECT, CODE, TEST) |
 | **metadata.upstream_tasks** | Task IDs whose handoff metadata provides input context |
 | **metadata.artifact_paths** | Conventional file paths to read for content context |
@@ -418,7 +420,7 @@ Tasks are the instruction set, not just tracking artifacts. A Task's description
 
 The lead creates the agent work task (TaskCreate with full mission in description + metadata), then spawns a teammate with a thin bootstrap prompt:
 
-> "You are a {agent-type}. You have been assigned task {task_id}. Read it with TaskGet and execute it. When done, store your handoff in task metadata via TaskUpdate and send a completion signal via SendMessage to the lead."
+> "You are a {agent-type}. You have been assigned task {task_id}. Read it with TaskGet and execute it. Your assigner's name is in metadata.assigner — use it as the SendMessage recipient. When done, store your handoff in task metadata via TaskUpdate and send a completion signal via SendMessage to your assigner."
 
 The dispatch prompt is identical for every agent of a given type. The mission comes from the Task, not the prompt. This makes agents fungible and enables recovery — a stalled agent can be replaced by spawning a fresh one with the same bootstrap prompt.
 

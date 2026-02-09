@@ -24,9 +24,9 @@
 
 | Phase | What Happens |
 |-------|--------------|
-| 0. Analyze | Orchestrator assesses scope, selects relevant specialists |
+| 0. Analyze | Lead assesses scope, selects relevant specialists |
 | 1. Consult | Specialists provide planning perspectives in parallel |
-| 2. Synthesize | Orchestrator resolves conflicts, sequences work, assesses risk |
+| 2. Synthesize | Lead resolves conflicts, sequences work, assesses risk |
 | 3. Present | Save plan to `docs/plans/`, present to user, await approval |
 
 **Key rules**:

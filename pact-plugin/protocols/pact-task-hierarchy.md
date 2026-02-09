@@ -48,6 +48,7 @@ Agent tasks include metadata for context:
 
 ```json
 {
+  "assigner": "team-lead-name",
   "phase": "CODE",
   "domain": "backend",
   "feature": "user-auth",

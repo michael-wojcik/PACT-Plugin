@@ -4,7 +4,7 @@
 > Used by `plan-mode` (producer) to populate the Phase Requirements table,
 > and by `orchestrate` (consumer) to verify phase-skip decisions.
 
-A plan section may exist without being complete. Before skipping a phase, the orchestrator checks the corresponding plan section for these 6 incompleteness signals. **Any signal present means the phase should run.**
+A plan section may exist without being complete. Before skipping a phase, the lead checks the corresponding plan section for these 6 incompleteness signals. **Any signal present means the phase should run.**
 
 ---
 

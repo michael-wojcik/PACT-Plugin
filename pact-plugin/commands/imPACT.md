@@ -10,7 +10,7 @@ You hit a blocker: $ARGUMENTS
 
 imPACT operates on blocker Tasks reported by specialists.
 
-Specialists report blockers via SendMessage ("BLOCKER on task {ID}: ..."). The orchestrator creates blocker Tasks and uses `addBlockedBy` to block the specialist's task:
+Specialists report blockers via SendMessage ("BLOCKER on task {ID}: ..."). The lead creates blocker Tasks and uses `addBlockedBy` to block the specialist's task:
 
 ```
 1. Receive SendMessage blocker signal from specialist
@@ -58,7 +58,7 @@ imPACT is **S3-level triage**—operational problem-solving within normal workfl
 | Aspect | imPACT | Algedonic |
 |--------|--------|-----------|
 | **Level** | S3 (operational) | S5 (policy/viability) |
-| **Who decides** | Orchestrator triages | User decides |
+| **Who decides** | Lead triages | User decides |
 | **Question** | "How do we proceed?" | "Should we proceed at all?" |
 | **Examples** | Missing info, wrong approach, need help | Security breach, data risk, ethics issue |
 

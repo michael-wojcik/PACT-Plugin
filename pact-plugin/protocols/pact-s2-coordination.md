@@ -29,13 +29,13 @@ S2 manages information flow between agents:
 | From | To | Information |
 |------|-----|-------------|
 | Earlier agent | Later agents | Conventions established, interfaces defined |
-| Orchestrator | All agents | Shared context, boundary assignments |
-| Any agent | Orchestrator → All others | Resource claims, conflict warnings |
+| Lead | All agents | Shared context, boundary assignments |
+| Any agent | Lead → All others | Resource claims, conflict warnings |
 | TaskList | All agents | Current in_progress work, blockers, completed decisions |
 
 ### Pre-Parallel Coordination Check
 
-Before invoking parallel agents, the orchestrator must:
+Before invoking parallel agents, the lead must:
 
 1. **Identify potential conflicts**:
    - Shared files (merge conflict risk)
@@ -49,7 +49,7 @@ Before invoking parallel agents, the orchestrator must:
 3. **Establish resolution authority**:
    - Technical disagreements → Architect arbitrates
    - Style/convention disagreements → First agent's choice becomes standard
-   - Resource contention → Orchestrator allocates
+   - Resource contention → Lead allocates
 
 ### S2 Pre-Parallel Checkpoint Format
 
@@ -75,20 +75,20 @@ When analyzing parallel work, emit proactive coordination signals:
 | Same file | Sequence agents OR assign clear section boundaries |
 | Interface disagreement | Architect arbitrates; document decision |
 | Naming/convention | First agent's choice becomes standard for the batch |
-| Resource contention | Orchestrator allocates; others wait or work on different tasks |
+| Resource contention | Lead allocates; others wait or work on different tasks |
 
 ### Convention Propagation
 
 When "first agent's choice becomes standard," subsequent agents need to discover those conventions:
 
-1. **Orchestrator responsibility**: When invoking parallel agents after the first completes:
+1. **Lead responsibility**: When invoking parallel agents after the first completes:
    - Extract key conventions from first agent's output (naming patterns, file structure, API style)
    - Include in subsequent agents' prompts: "Follow conventions established: {list}"
 
-2. **Handoff reference**: Orchestrator passes first agent's key decisions to subsequent agents
+2. **Handoff reference**: Lead passes first agent's key decisions to subsequent agents
 
 3. **For truly parallel invocation** (all start simultaneously):
-   - Orchestrator pre-defines conventions in all prompts
+   - Lead pre-defines conventions in all prompts
    - Or: Run one agent first to establish conventions, then invoke the rest concurrently
    - **Tie-breaker**: If agents complete simultaneously and no first-agent convention exists, use alphabetical domain order (backend, database, frontend) for convention precedence
 

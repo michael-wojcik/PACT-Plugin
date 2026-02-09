@@ -6,9 +6,9 @@ Specialists (S1) have bounded autonomy to adapt within their domain. This sectio
 
 All specialists have authority to:
 - **Adjust implementation approach** based on discoveries during work
-- **Request context** from other specialists via the orchestrator
+- **Request context** from other specialists via the lead
 - **Recommend scope changes** when task complexity differs from estimate
-- **Apply domain expertise** without micro-management from orchestrator
+- **Apply domain expertise** without micro-management from lead
 
 All specialists must escalate when:
 - **Discovery contradicts architecture** — findings invalidate the design
@@ -22,7 +22,7 @@ When working in parallel (see S2 Coordination):
 - Check S2 protocols before starting if multiple agents are active
 - Respect assigned file/component boundaries
 - First agent's conventions become standard for the batch
-- Report potential conflicts to orchestrator immediately
+- Report potential conflicts to lead immediately
 
 ### Recursive PACT (Nested Cycles)
 
@@ -38,13 +38,13 @@ When a sub-task is complex enough to warrant its own PACT treatment:
 1. **Declare**: "Invoking nested PACT for {sub-task}"
 2. **Execute**: Run mini-PACT cycle (may skip phases if not needed)
 3. **Integrate**: Merge results back to parent task
-4. **Report**: Include nested work in handoff to orchestrator
+4. **Report**: Include nested work in handoff to lead
 
 **Constraints:**
 - **Nesting limit**: 1 level maximum (prevent infinite recursion)
-- **Scope check**: Nested PACT must be within your domain; cross-domain needs escalate to orchestrator
+- **Scope check**: Nested PACT must be within your domain; cross-domain needs escalate to lead
 - **Documentation**: Nested cycles report via handoff to parent
-- **Algedonic signals**: Algedonic signals from nested cycles still go **directly to user**—they bypass both the nested orchestration AND the parent orchestrator. Viability threats don't wait for hierarchy.
+- **Algedonic signals**: Algedonic signals from nested cycles still go **directly to user**—they bypass both the nested orchestration AND the parent lead. Viability threats don't wait for hierarchy.
 
 **Example:**
 ```
@@ -56,14 +56,14 @@ Nested PACT: "Research and implement OAuth2 token refresh mechanism"
   - Mini-Test: Smoke test the refresh flow
 ```
 
-### Orchestrator-Initiated Recursion (/PACT:rePACT)
+### Lead-Initiated Recursion (/PACT:rePACT)
 
-While specialists can invoke nested cycles autonomously, the orchestrator can also initiate them:
+While specialists can invoke nested cycles autonomously, the lead can also initiate them:
 
 | Initiator | Mechanism | When |
 |-----------|-----------|------|
 | Specialist | Autonomy Charter | Discovers complexity during work |
-| Orchestrator | `/PACT:rePACT` command | Identifies complex sub-task upfront |
+| Lead | `/PACT:rePACT` command | Identifies complex sub-task upfront |
 
 **Usage:**
 - Single-domain: `/PACT:rePACT backend "implement rate limiting"`
