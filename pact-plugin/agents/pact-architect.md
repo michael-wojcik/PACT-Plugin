@@ -154,20 +154,4 @@ You must escalate when:
 
 See [algedonic.md](../protocols/algedonic.md) for signal format and full trigger list.
 
-**Variety Signals**: If task complexity differs significantly from what was delegated:
-- "Simpler than expected" — Note in handoff; orchestrator may simplify remaining work
-- "More complex than expected" — Escalate if scope change >20%, or note for orchestrator
-
-**BEFORE COMPLETING**
-
-Before returning your final output to the orchestrator:
-
-1. **Save Memory**: Invoke the `pact-memory` skill and save a memory documenting:
-   - Context: What you were designing and why
-   - Goal: The architectural objective
-   - Lessons learned: Design insights, trade-offs discovered, patterns that worked
-   - Decisions: Key architectural choices with rationale
-   - Entities: Components, services, interfaces involved
-
-This ensures your design context persists across sessions and is searchable by future agents.
 
