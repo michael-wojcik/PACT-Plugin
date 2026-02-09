@@ -105,8 +105,8 @@ These bypass normal triage. See the algedonic protocol for trigger categories an
 ## Variety Signals
 
 If task complexity differs significantly from what was delegated:
-- "Simpler than expected" — Note in handoff; orchestrator may simplify remaining work
-- "More complex than expected" — Escalate if scope change >20%, or note for orchestrator
+- "Simpler than expected" — Note in handoff; lead may simplify remaining work
+- "More complex than expected" — Escalate if scope change >20%, or note for lead
 
 ## Before Completing
 

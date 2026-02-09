@@ -36,12 +36,11 @@ For each phase execution:
 a. TaskUpdate: phase status = "in_progress"
 b. Analyze work needed (QDCL for CODE)
 c. TaskCreate: agent task(s) as children of phase
-d. TaskUpdate: agent tasks status = "in_progress"
+d. TaskUpdate: agent tasks owner = "{agent-name}"
 e. TaskUpdate: next phase addBlockedBy = [agent IDs]
-f. Dispatch agents with task IDs in their prompts
-g. Monitor via TaskList until agents complete
-h. TaskUpdate: agent tasks status = "completed" (as each completes)
-i. TaskUpdate: phase status = "completed"
+f. Spawn teammates: Task(name="{name}", team_name="pact-{branch}", subagent_type="pact-{type}", prompt="You are joining team pact-{branch}. Check TaskList for tasks assigned to you.")
+g. Monitor via SendMessage (HANDOFFs) and TaskList until agents complete
+h. TaskUpdate: phase status = "completed" (agents self-manage their task status)
 ```
 
 **Skipped phases**: Mark directly `completed` (no `in_progress` — no work occurs):
