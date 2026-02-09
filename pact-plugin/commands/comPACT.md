@@ -12,7 +12,7 @@ Delegate this focused task within a single PACT domain: $ARGUMENTS
 
 ## Team Lifecycle
 
-comPACT operates within an Agent Teams session. If the session team already exists (e.g., created by `/PACT:orchestrate`), reuse it. If comPACT is invoked standalone, ensure a team exists first.
+comPACT operates within an Agent Teams session. If the session team already exists (e.g., created by `/PACT:orchestrate`), reuse it. If comPACT is invoked standalone, create and clean up the team following the Team Lifecycle protocol in CLAUDE.md (Agent Teams Execution Model > Team Lifecycle).
 
 ## Task Hierarchy
 
@@ -253,5 +253,5 @@ During comPACT execution, if you discover the task is more complex than expected
 **Heuristic**: If re-assessing variety would now score Medium+ (7+), escalate.
 
 **Conversely**, if the specialist reports the task is simpler than expected:
-- Note in handoff to orchestrator
-- Complete the task; orchestrator may simplify remaining work
+- Note in handoff to lead
+- Complete the task; lead may simplify remaining work

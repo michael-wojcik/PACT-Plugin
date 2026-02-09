@@ -174,6 +174,10 @@ All commits from all sub-scopes land on the single feature branch in execution o
 
 ---
 
+## Team Context
+
+rePACT operates within the existing session team created by `/PACT:orchestrate` (see CLAUDE.md > Agent Teams Execution Model > Team Lifecycle). All specialists are spawned into the parent team -- no separate team is created or deleted for nested cycles.
+
 ## Workflow
 
 ### Phase 0: Assess

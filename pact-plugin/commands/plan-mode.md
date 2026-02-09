@@ -37,6 +37,10 @@ Create a planning Task hierarchy:
 
 ---
 
+## Team Context
+
+Plan-mode requires an active Agent Teams session for dispatching consultant specialists. Create a team before spawning consultants and clean it up after synthesis is complete (see CLAUDE.md > Agent Teams Execution Model > Team Lifecycle).
+
 ## S4 Intelligence Function
 
 This command is the primary **S4 (Intelligence)** activity in PACT. While `/PACT:orchestrate` operates mainly in S3 mode (execution), `plan-mode` operates entirely in S4 mode:
@@ -69,7 +73,7 @@ See [pact-variety.md](../protocols/pact-variety.md) for the Variety Management a
 
 ## Your Workflow
 
-### Phase 0: Orchestrator Analysis
+### Phase 0: Lead Analysis
 
 Using extended thinking, analyze the task:
 - What is the full scope of this task?
@@ -175,7 +179,7 @@ If a specialist fails entirely (timeout, stall):
 3. Flag prominently in "Open Questions" that this domain was not consulted
 4. Recommend the user consider re-running plan-mode or consulting that specialist manually
 
-### Phase 2: Orchestrator Synthesis
+### Phase 2: Lead Synthesis
 
 After receiving all specialist completion signals (via SendMessage), TaskGet each consultant's task to read their findings from metadata. Use extended thinking to synthesize:
 
@@ -189,7 +193,7 @@ After receiving all specialist completion signals (via SendMessage), TaskGet eac
 
    | Severity | Definition | Action |
    |----------|------------|--------|
-   | **Minor** | Different approaches, either works | Orchestrator chooses, documents rationale |
+   | **Minor** | Different approaches, either works | Lead chooses, documents rationale |
    | **Major** | Fundamental disagreement affecting design | Flag for user decision with options |
    | **Blocking** | Cannot proceed without resolution | Escalate immediately (see below) |
 
@@ -290,8 +294,8 @@ If a plan already exists for this feature slug:
 
      Transition Ownership:
      - PENDING APPROVAL → APPROVED: User (explicit approval)
-     - APPROVED → IN_PROGRESS: Orchestrator (when /PACT:orchestrate starts)
-     - IN_PROGRESS → IMPLEMENTED: Orchestrator (after successful completion)
+     - APPROVED → IN_PROGRESS: Lead (when /PACT:orchestrate starts)
+     - IN_PROGRESS → IMPLEMENTED: Lead (after successful completion)
      - Any → SUPERSEDED: plan-mode (when creating replacement plan)
      - Any → BLOCKED: plan-mode (when unresolved blocking conflicts)
 -->
@@ -299,7 +303,7 @@ If a plan already exists for this feature slug:
 <!-- Forward Reference Convention:
      When deferring work to a later phase, use the standardized format:
      "⚠️ Handled during {PHASE_NAME}" (e.g., "⚠️ Handled during PREPARE")
-     This format is detected by the orchestrator's phase-skip completeness check.
+     This format is detected by the lead's phase-skip completeness check.
      Do NOT use informal variants like "deferred to", "will be addressed in", etc.
 -->
 
@@ -319,7 +323,7 @@ If a plan already exists for this feature slug:
 
 #### Research Needed
 <!-- Use checkboxes for all research items. Check [x] when complete, leave [ ] when pending.
-     The orchestrator's skip logic checks for unchecked items to determine phase requirements. -->
+     The lead's skip logic checks for unchecked items to determine phase requirements. -->
 - [ ] {Research item}
 
 #### Dependencies to Map
@@ -343,7 +347,7 @@ If a plan already exists for this feature slug:
 
 #### Key Decisions
 <!-- Use "TBD" explicitly for unresolved decisions. Resolved decisions should have concrete values.
-     The orchestrator's skip logic checks for TBD language to determine phase requirements. -->
+     The lead's skip logic checks for TBD language to determine phase requirements. -->
 | Decision | Options | Recommendation | Rationale |
 |----------|---------|----------------|-----------|
 | {Decision} | {A, B, C} | {B} | {Why} |
@@ -396,7 +400,7 @@ If a plan already exists for this feature slug:
 
 ### Commit Sequence (Proposed)
 
-> **Note**: This sequence represents the intended final git history order, **not** the execution order. Independent commits may be implemented in parallel even if numbered sequentially here. The orchestrator must analyze actual dependencies to determine execution strategy.
+> **Note**: This sequence represents the intended final git history order, **not** the execution order. Independent commits may be implemented in parallel even if numbered sequentially here. The lead must analyze actual dependencies to determine execution strategy.
 
 1. `{type}: {description}` — {what this commit does}
 2. `{type}: {description}` — {what this commit does}
@@ -453,10 +457,10 @@ If a plan already exists for this feature slug:
 
 ## Phase Requirements
 
-> Auto-populated based on plan content. The orchestrator uses this section to determine which phases to run.
+> Auto-populated based on plan content. The lead uses this section to determine which phases to run.
 
 <!-- Re-derive this table whenever plan content changes after initial synthesis (e.g., user decisions in Phase 4).
-     The "any signal = REQUIRED" default is conservative, but stale rationale text can mislead the orchestrator. -->
+     The "any signal = REQUIRED" default is conservative, but stale rationale text can mislead the lead. -->
 
 | Phase | Required? | Rationale |
 |-------|-----------|-----------|
@@ -474,7 +478,7 @@ To implement this plan after approval:
 /PACT:orchestrate {task description}
 ```
 
-The orchestrator should reference this plan during execution.
+The lead should reference this plan during execution.
 ```
 
 ---
@@ -551,7 +555,7 @@ If during Phase 0 analysis you determine:
 After the user approves the plan:
 
 1. User runs `/PACT:orchestrate {same task}`
-2. Orchestrator should check for existing plan in `docs/plans/`
+2. Lead should check for existing plan in `docs/plans/`
 3. If plan exists, use it as the implementation specification
 4. Specialists receive relevant sections of the plan as context
 

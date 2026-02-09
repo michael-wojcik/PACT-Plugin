@@ -45,7 +45,7 @@ Create a review Task hierarchy:
 19. TaskUpdate: Review task status = "completed", metadata.artifact = PR URL
 ```
 
-> **Convention**: Synchronous user steps (step tasks, approval tasks) skip the `in_progress` transition — they go directly from `pending` to `completed` since the orchestrator handles them inline without background dispatch.
+> **Convention**: Synchronous user steps (step tasks, approval tasks) skip the `in_progress` transition — they go directly from `pending` to `completed` since the lead handles them inline without background dispatch.
 
 **Example structure:**
 ```
@@ -71,6 +71,12 @@ Review task: in_progress (persists until merge-ready)
 ```
 
 **Key rules**: Review stays `in_progress` until merge-ready; fresh tasks per cycle; re-review is verify-only (minimal scope); imPACT escalation blocks (doesn't complete/delete) review; resume after resolution.
+
+---
+
+## Team Context
+
+Peer review requires an active Agent Teams session. When invoked from `/PACT:orchestrate`, the session team already exists. When invoked standalone, ensure a team exists first (see CLAUDE.md > Agent Teams Execution Model > Team Lifecycle).
 
 ---
 

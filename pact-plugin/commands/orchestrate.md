@@ -96,7 +96,7 @@ For algedonic signal handling (HALT/ALERT responses, algedonic vs imPACT distinc
 
 ## Output Conciseness
 
-**Default: Concise output.** The orchestrator's internal reasoning (variety analysis, dependency checking, execution strategy) runs internally. User sees only decisions and key context.
+**Default: Concise output.** The lead's internal reasoning (variety analysis, dependency checking, execution strategy) runs internally. User sees only decisions and key context.
 
 | Internal (don't show) | External (show) |
 |----------------------|-----------------|
@@ -163,13 +163,7 @@ If comPACT selected, hand off to `/PACT:comPACT`.
 
 ### Team Creation
 
-Create the session team before dispatching any specialists:
-
-```
-TeamCreate(name="{feature-slug}")
-```
-
-The team persists for the duration of orchestration. All specialists are spawned into this team.
+Create the session team before dispatching any specialists, following the Team Lifecycle protocol in CLAUDE.md (Agent Teams Execution Model > Team Lifecycle). Use `{feature-slug}` as the team name. The team persists for the duration of orchestration.
 
 ---
 
@@ -250,7 +244,7 @@ When a phase is skipped but a coder encounters a decision that would have been h
 | Decision Scope | Examples | Action |
 |----------------|----------|--------|
 | **Minor** | Naming conventions, local file structure, error message wording | Coder decides, documents in commit message |
-| **Moderate** | Interface shape within your module, error handling pattern, internal component boundaries | Coder decides and implements, but flags decision with rationale in handoff; orchestrator validates before next phase |
+| **Moderate** | Interface shape within your module, error handling pattern, internal component boundaries | Coder decides and implements, but flags decision with rationale in handoff; lead validates before next phase |
 | **Major** | New module needed, cross-module contract, architectural pattern affecting multiple components | Blocker -> `/PACT:imPACT` -> may need to run skipped phase |
 
 **Boundary heuristic**: If a decision affects files outside the current specialist's scope, treat it as Major.
@@ -396,7 +390,7 @@ Task(
 
 > **S5 Policy Checkpoint (Pre-CODE)**: Before spawning coders, verify:
 > 1. "Does the architecture align with project principles?"
-> 2. "Am I delegating ALL code changes to specialists?" (orchestrator writes no application code)
+> 2. "Am I delegating ALL code changes to specialists?" (lead writes no application code)
 > 3. "Are there any S5 non-negotiables at risk?"
 >
 > **Delegation reminder**: Even if you identified the exact implementation during earlier phases, you must delegate the actual coding. Knowing what to build != permission to build it yourself.
@@ -525,7 +519,7 @@ After all sub-scopes complete, execute the [Scope Verification Protocol](../prot
 
 ```
 a. Spawn architect for cross-scope contract compatibility verification
-b. Lead verifies contract fulfillment (metadata comparison — orchestrator-level work)
+b. Lead verifies contract fulfillment (metadata comparison — lead-level work)
 c. Optionally spawn test engineer for cross-scope integration tests (parallel with step a)
 ```
 
@@ -626,7 +620,7 @@ On signal detected: Follow Signal Task Handling in CLAUDE.md.
 2. **Verify all work is committed** -- CODE and TEST phase commits should already exist; if any uncommitted changes remain, commit them now
 3. **TaskUpdate**: Feature task status = "completed" (all phases done, all work committed)
 4. **Run `/PACT:peer-review`** to create PR and get multi-agent review (team must still exist -- peer-review spawns reviewer teammates into it)
-5. **Clean up team**: `TeamDelete(name="{feature-slug}")` -- terminates all remaining teammates and releases resources
-6. **Present review summary and stop** -- orchestrator never merges (S5 policy)
+5. **Clean up team**: Follow the Team Lifecycle cleanup protocol in CLAUDE.md (Agent Teams Execution Model > Team Lifecycle)
+6. **Present review summary and stop** -- lead never merges (S5 policy)
 7. **S4 Retrospective** (after user decides): Briefly note--what worked well? What should we adapt for next time?
 8. **High-variety audit trail** (variety 10+ only): Delegate to `pact-memory-agent` to save key orchestration decisions, S3/S4 tensions resolved, and lessons learned
