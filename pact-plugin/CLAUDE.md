@@ -371,8 +371,6 @@ When delegating a task, these specialist agents are available to execute PACT ph
 
 #### Reuse vs. Spawn Decision
 
-Before spawning a new agent, check for idle teammates with relevant context:
-
 | Situation | Action |
 |-----------|--------|
 | Idle agent has relevant context (same files/domain) | `SendMessage` to reassign |
@@ -381,13 +379,12 @@ Before spawning a new agent, check for idle teammates with relevant context:
 | Agent's context near capacity from prior work | Spawn new |
 | Reviewer found issues → now needs fixer | Reuse the reviewer (they know the problem best) |
 
-**Default**: Prefer reuse when domain + context overlap. The reused agent already has files loaded and understands the problem space — spawning a duplicate wastes tokens rebuilding that context.
+**Default**: Prefer reuse when domain + context overlap. When reusing, prompt minimally — just the delta (e.g., `"Follow-up task: {X}. You already have context from {Y}."`).
 
 #### Agent Shutdown Guidance
 
-- **Shut down after verification**: Once a reviewer's findings are addressed and verified, shut them down via `SendMessage(type="shutdown_request")`
-- **Keep alive during remediation**: If fixes are in progress that may need the reviewer's input, keep them available until fixes are committed
-- **Default to shutdown**: Only keep agents alive if there's a concrete upcoming task for them. Idle agents consume resources with no benefit
+- **Shut down after verification**: Once findings are addressed and verified, shut down via `SendMessage(type="shutdown_request")`
+- **Keep alive during remediation**: If fixes in progress may need the agent's input, keep them until fixes are committed
 
 **Exception — `pact-memory-agent`**: This agent is NOT a team member. It still uses the background task model:
 ```python
@@ -438,18 +435,6 @@ HANDOFF:
 All five items are always present. Use this to update Task metadata and inform subsequent phases.
 
 If the `validate_handoff` hook warns about a missing HANDOFF, extract available context from the agent's response and update the Task accordingly.
-
-#### Context-Aware Reuse Prompts
-
-When reusing an idle agent vs. spawning a new one, adjust the prompt accordingly:
-
-**Reuse prompt** (for idle agent with relevant context):
-```
-Follow-up task: {brief description}.
-You already have context from your prior work on {X}.
-New requirement: {Y}.
-```
-Keep it minimal — the agent already has files loaded and domain understanding. Only provide the delta.
 
 ### How to Delegate
 
