@@ -88,6 +88,7 @@ Review task: in_progress (persists until merge-ready)
 | When | Shutdown? |
 |------|-----------|
 | After review synthesis, before remediation decisions | **No** — remediation likely needs them |
+| All reviewers approve with zero findings | **Yes** — no remediation needed |
 | After all remediation complete + user merge decision | **Yes** — no further work expected |
 | User says "No" to all minor/future items (no fixes needed) | **Yes** — review workflow complete |
 
