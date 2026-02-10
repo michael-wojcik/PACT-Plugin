@@ -363,6 +363,15 @@ When delegating a task, these specialist agents are available to execute PACT ph
 3. `TaskUpdate(taskId, owner="{name}")` — assign ownership
 4. `Task(name="{name}", team_name="pact-{branch}", subagent_type="pact-{type}", prompt="You are joining team pact-{branch}. Check TaskList for tasks assigned to you.")` — spawn the teammate
 
+**Exception — `pact-memory-agent`**: This agent is NOT a team member. It still uses the background task model:
+```python
+Task(
+    subagent_type="pact-memory-agent",
+    run_in_background=true,  # ← memory agent only
+    prompt="Save memory: ..."
+)
+```
+
 **Why Agent Teams?**
 - Teammates self-manage task status (claim, progress, complete)
 - Communication via SendMessage (HANDOFFs, blockers, algedonic signals)
@@ -383,17 +392,11 @@ When delegating a task, these specialist agents are available to execute PACT ph
 
 #### Agent Shutdown Guidance
 
-- **Shut down when done**: Once an agent's task is complete and no follow-up is expected, shut down via `SendMessage(type="shutdown_request")`
-- **Keep alive when needed**: If upcoming work may need the agent's context (e.g., remediation from their review, follow-up in their domain), keep them until that work completes
+Do **not** shut down teammates preemptively. Reuse idle teammates whenever possible (see Reuse vs. Spawn above). Teammates persist until after PR merge or `/PACT:wrap-up`.
 
-**Exception — `pact-memory-agent`**: This agent is NOT a team member. It still uses the background task model:
-```python
-Task(
-    subagent_type="pact-memory-agent",
-    run_in_background=true,  # ← memory agent only
-    prompt="Save memory: ..."
-)
-```
+Exceptions:
+- rePACT sub-scope specialists shut down after their nested cycle (orchestrator relays handoff details to subsequent sub-scopes)
+- comPACT specialists shut down when user chooses "Not yet"
 
 ### Recommended Agent Prompting Structure
 
