@@ -394,7 +394,7 @@ When delegating a task, these specialist agents are available to execute PACT ph
 | Coders (from CODE phase) | All peer-review remediation complete + user merge decision |
 | Test engineer (from TEST phase) | All peer-review remediation complete + user merge decision (may verify fixes) |
 | Reviewers (from peer-review) | All remediation complete + user merge decision |
-| Preparer / Architect | Next phase begins (unless retained as consultant for active questions) |
+| Preparer / Architect | All peer-review remediation complete + user merge decision (available as consultants throughout) |
 | rePACT sub-scope specialists | After nested cycle completes (apply Reuse vs. Spawn for subsequent sub-scopes) |
 
 **Exception — `pact-memory-agent`**: This agent is NOT a team member. It still uses the background task model:
