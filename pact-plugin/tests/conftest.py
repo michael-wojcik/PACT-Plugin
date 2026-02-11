@@ -171,15 +171,15 @@ def make_send_message_call(
 
 
 def make_team_create_call(
-    team_name: str = "PACT",
-    description: str = "PACT team for feature work",
+    team_name: str = "PACT-test1234",
+    description: str = "PACT session team",
     tool_use_id: str = "teamcreate-123",
 ) -> dict[str, Any]:
     """
     Create a TeamCreate tool call block for Agent Teams team creation.
 
     Args:
-        team_name: Name of the team (e.g., "PACT")
+        team_name: Name of the team (e.g., "PACT-a1b2c3d4")
         description: Description of the team
         tool_use_id: Unique ID for the tool call
 
@@ -211,7 +211,7 @@ def make_team_task_call(
 
     Args:
         name: Teammate name (e.g., "preparer", "backend-coder")
-        team_name: Team to join (e.g., "PACT")
+        team_name: Team to join (e.g., "PACT-a1b2c3d4")
         subagent_type: Agent type (e.g., "pact-backend-coder")
         prompt: Thin prompt directing agent to check TaskList
         tool_use_id: Unique ID for the tool call
@@ -595,7 +595,7 @@ def create_agent_teams_orchestrate_transcript(
     phase: str = "code",
     include_task: str = "implement auth",
     include_termination: bool = False,
-    team_name: str = "PACT",
+    team_name: str = "PACT-test1234",
 ) -> str:
     """
     Generate a realistic orchestrate workflow transcript using Agent Teams dispatch.
@@ -607,7 +607,7 @@ def create_agent_teams_orchestrate_transcript(
         phase: Current phase (variety-assess, prepare, architect, code, test)
         include_task: Task description
         include_termination: Whether to add termination signal
-        team_name: Team name for Agent Teams dispatch
+        team_name: Session-unique team name for Agent Teams dispatch (e.g., "PACT-a1b2c3d4")
 
     Returns:
         JSONL string representing the transcript

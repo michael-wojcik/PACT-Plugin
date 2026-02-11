@@ -10,7 +10,7 @@ Performs:
 3. Updates ~/.claude/CLAUDE.md (merges/installs PACT Orchestrator)
 4. Ensures project CLAUDE.md exists with memory sections
 5. Checks for stale pinned context (delegated to staleness.py)
-6. Reminds orchestrator to create PACT team before dispatching
+6. Generates session-unique PACT team name and reminds orchestrator to create it
 7. Checks for in_progress Tasks (resumption context via Task integration)
 
 Note: Memory-related initialization (dependency installation, embedding
@@ -23,6 +23,7 @@ Output: JSON with `hookSpecificOutput.additionalContext` for status
 """
 
 import json
+import secrets
 import sys
 import os
 from pathlib import Path
@@ -60,6 +61,30 @@ def check_pinned_staleness():
     """
     path = _get_project_claude_md_path()
     return _staleness_check(claude_md_path=path)
+
+
+def generate_team_name(input_data: dict[str, Any]) -> str:
+    """
+    Generate a session-unique PACT team name.
+
+    Uses the first 8 characters of the session_id from the SessionStart hook
+    input (or CLAUDE_SESSION_ID env var) to create a unique team name like
+    "PACT-0001639f". Falls back to a random 8-character hex suffix if neither
+    source provides a session_id.
+
+    Args:
+        input_data: Parsed JSON from stdin (SessionStart hook input)
+
+    Returns:
+        Team name string like "PACT-0001639f"
+    """
+    raw_id = input_data.get("session_id")
+    session_id = str(raw_id) if raw_id else os.environ.get("CLAUDE_SESSION_ID", "")
+    if session_id:
+        suffix = session_id[:8]
+    else:
+        suffix = secrets.token_hex(4)
+    return f"PACT-{suffix}"
 
 
 def setup_plugin_symlinks() -> str | None:
@@ -381,7 +406,7 @@ def main():
     3. Updates ~/.claude/CLAUDE.md (merges/installs PACT Orchestrator)
     4. Ensures project CLAUDE.md exists with memory sections
     5. Checks for stale pinned context entries in project CLAUDE.md
-    6. Reminds orchestrator to create PACT team before dispatching
+    6. Generates session-unique PACT team name and reminds orchestrator to create it
     7. Checks for in_progress Tasks (resumption context via Task integration)
 
     Memory initialization (dependencies, migrations, embedding catch-up) is
@@ -437,8 +462,9 @@ def main():
             else:
                 context_parts.append(staleness_msg)
 
-        # 6. Remind orchestrator to create PACT team
-        context_parts.append("⚠️ Once per session, run TeamCreate(team_name=\"PACT\") before starting any work.")
+        # 6. Remind orchestrator to create session-unique PACT team
+        team_name = generate_team_name(input_data)
+        context_parts.append(f"⚠️ Once per session, run TeamCreate(team_name=\"{team_name}\") before starting any work or spawning any agents.")
 
         # 7. Check for in_progress Tasks (resumption context via Task integration)
         tasks = get_task_list()
