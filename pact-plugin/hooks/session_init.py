@@ -464,7 +464,7 @@ def main():
 
         # 6. Remind orchestrator to create session-unique PACT team
         team_name = generate_team_name(input_data)
-        context_parts.append(f"⚠️ Once per session, run TeamCreate(team_name=\"{team_name}\") before starting any work or spawning any agents.")
+        context_parts.append(f"⚠️ Once per session, run TeamCreate(team_name=\"{team_name}\") before starting any work or spawning any agents. Use the name `{team_name}` wherever `{{team_name}}` appears in commands.")
 
         # 7. Check for in_progress Tasks (resumption context via Task integration)
         tasks = get_task_list()
