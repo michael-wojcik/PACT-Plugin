@@ -97,6 +97,8 @@ Skip specialists clearly not relevant (e.g., skip database engineer for pure UI 
 
 ### Phase 1: Parallel Specialist Consultation
 
+**Verify session team exists**: The `{team_name}` team should already exist from session start. If not, create it now: `TeamCreate(team_name="{team_name}")`.
+
 Dispatch relevant specialists **in parallel**, each in **planning-only mode**.
 
 **Use this prompt template for each specialist:**

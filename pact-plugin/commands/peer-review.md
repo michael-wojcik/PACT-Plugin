@@ -85,6 +85,8 @@ Review task: in_progress (persists until merge-ready)
 
 **PR Review Workflow**
 
+**Verify session team exists**: The `{team_name}` team should already exist from session start. If not, create it now: `TeamCreate(team_name="{team_name}")`.
+
 Pull request reviews should mirror real-world team practices where multiple reviewers sign off before merging. Dispatch **at least 3 reviewers in parallel** to provide comprehensive review coverage:
 
 Standard reviewer combination:

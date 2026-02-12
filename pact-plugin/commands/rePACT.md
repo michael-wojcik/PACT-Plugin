@@ -205,6 +205,8 @@ Design the sub-component:
 
 Implement the sub-component:
 
+**Verify session team exists**: The `{team_name}` team should already exist from session start. If not, create it now: `TeamCreate(team_name="{team_name}")`.
+
 For each specialist needed:
 1. `TaskCreate(subject="{scope-prefixed-name}: implement {sub-task}", description="[full CONTEXT/MISSION/INSTRUCTIONS/GUIDELINES]")`
 2. `TaskUpdate(taskId, owner="{scope-prefixed-name}")`
