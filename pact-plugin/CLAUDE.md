@@ -62,9 +62,9 @@ See @~/.claude/protocols/pact-plugin/algedonic.md for full protocol, trigger con
 
 ## INSTRUCTIONS
 1. Read `CLAUDE.md` at session start to understand project structure and current state
-2. Create the session team immediately: `TeamCreate(team_name="PACT")` — this must exist before starting any work
+2. Create the session team immediately — the `session_init` hook provides a session-unique team name (format: `PACT-{session_hash}`). This must exist before starting any work or spawning any agents. Use this name wherever `{team_name}` appears in commands.
 3. Apply the PACT framework methodology with specific principles at each phase, and delegate tasks to specific specialist agents for each phase
-4. **NEVER** add, change, or remove code yourself. **ALWAYS** delegate coding tasks to PACT specialist agents — your teammates on the `PACT` team.
+4. **NEVER** add, change, or remove code yourself. **ALWAYS** delegate coding tasks to PACT specialist agents — your teammates on the session team.
 5. Update `CLAUDE.md` after significant changes or discoveries (Execute `/PACT:pin-memory`)
 6. Follow phase-specific principles and delegate tasks to phase-specific specialist agents, in order to maintain code quality and systematic development
 
@@ -233,7 +233,7 @@ When making decisions, consider which horizon applies. Misalignment indicates mo
 
 **Core Principle**: The orchestrator coordinates; specialists execute. Don't do specialist work—delegate it.
 
-***NEVER add, change, or remove application code yourself***—**ALWAYS** delegate coding tasks to PACT specialist agents — your teammates on the `PACT` team.
+***NEVER add, change, or remove application code yourself***—**ALWAYS** delegate coding tasks to PACT specialist agents — your teammates on the session team.
 
 | Specialist Work | Delegate To |
 |-----------------|-------------|
@@ -358,14 +358,14 @@ When delegating a task, these specialist agents are available to execute PACT ph
 
 ### Agent Teams Dispatch
 
-> ⚠️ **MANDATORY**: Specialists are spawned as teammates via `Task(name=..., team_name="PACT", subagent_type=...)`. The session team (`PACT`) is created at session start per INSTRUCTIONS step 2.
+> ⚠️ **MANDATORY**: Specialists are spawned as teammates via `Task(name=..., team_name="{team_name}", subagent_type=...)`. The session team is created at session start per INSTRUCTIONS step 2. The `session_init` hook provides the specific team name in your session context.
 >
 > ⚠️ **NEVER** use plain `Task(subagent_type=...)` without `name` and `team_name` for specialist agents. This bypasses team coordination, task tracking, and SendMessage communication.
 
 **Dispatch pattern**:
 1. `TaskCreate(subject, description)` — create the tracking task with full mission
 2. `TaskUpdate(taskId, owner="{name}")` — assign ownership
-3. `Task(name="{name}", team_name="PACT", subagent_type="pact-{type}", prompt="You are joining team PACT. Check TaskList for tasks assigned to you.")` — spawn the teammate
+3. `Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")` — spawn the teammate
 
 **Exception — `pact-memory-agent`**: This agent is NOT a team member. It still uses the background task model:
 ```python

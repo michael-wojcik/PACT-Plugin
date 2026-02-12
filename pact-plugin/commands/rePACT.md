@@ -6,7 +6,7 @@ Run a recursive PACT cycle for this sub-task: $ARGUMENTS
 
 This command initiates a **nested P→A→C→T cycle** for a sub-task that is too complex for simple delegation but should remain part of the current feature work.
 
-**Team behavior**: rePACT spawns sub-scope teammates into the existing session team (`PACT`). No new team is created. Use scope-prefixed names (e.g., `backend-coder-auth-scope`) to distinguish sub-scope teammates from parent-scope teammates.
+**Team behavior**: rePACT spawns sub-scope teammates into the existing session team (`PACT-{session_hash}`). No new team is created. Use scope-prefixed names (e.g., `backend-coder-auth-scope`) to distinguish sub-scope teammates from parent-scope teammates.
 
 ---
 
@@ -205,10 +205,12 @@ Design the sub-component:
 
 Implement the sub-component:
 
+**Verify session team exists**: The `{team_name}` team should already exist from session start. If not, create it now: `TeamCreate(team_name="{team_name}")`.
+
 For each specialist needed:
 1. `TaskCreate(subject="{scope-prefixed-name}: implement {sub-task}", description="[full CONTEXT/MISSION/INSTRUCTIONS/GUIDELINES]")`
 2. `TaskUpdate(taskId, owner="{scope-prefixed-name}")`
-3. `Task(name="{scope-prefixed-name}", team_name="PACT", subagent_type="pact-{specialist-type}", prompt="You are joining team PACT. Check TaskList for tasks assigned to you.")`
+3. `Task(name="{scope-prefixed-name}", team_name="{team_name}", subagent_type="pact-{specialist-type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`
 
 For multi-domain: spawn multiple specialists in parallel.
 Apply S2 coordination if parallel work.
