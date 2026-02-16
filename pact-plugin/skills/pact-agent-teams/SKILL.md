@@ -29,15 +29,27 @@ Report progress naturally in your responses. For significant milestones, update 
 
 When your work is done:
 
-1. **SendMessage** your HANDOFF to the lead:
+1. **Store HANDOFF in task metadata**:
    ```
-   SendMessage(type="message", recipient="lead", content="HANDOFF: ...", summary="Task complete: [brief]")
+   TaskUpdate(taskId, metadata={"handoff": {
+     "produced": [...],
+     "decisions": [...],
+     "uncertainty": [...],
+     "integration": [...],
+     "open_questions": [...]
+   }})
    ```
-2. **TaskUpdate**: Mark your task completed:
+2. **Notify lead with summary only**:
+   ```
+   SendMessage(type="message", recipient="lead",
+     content="Task complete. [1-2 sentences: what was done + any HIGH uncertainties]",
+     summary="Task complete: [brief]")
+   ```
+3. **Mark task completed**:
    `TaskUpdate(taskId, status="completed")`
-3. **Self-claim follow-up work**: Check `TaskList` for unassigned, unblocked tasks matching your domain
-4. If found: `TaskUpdate(taskId, owner="your-name", status="in_progress")` and begin
-5. If none: idle (you may be consulted or shut down)
+4. **Self-claim follow-up work**: Check `TaskList` for unassigned, unblocked tasks matching your domain
+5. If found: `TaskUpdate(taskId, owner="your-name", status="in_progress")` and begin
+6. If none: idle (you may be consulted or shut down)
 
 ### HANDOFF Format
 
