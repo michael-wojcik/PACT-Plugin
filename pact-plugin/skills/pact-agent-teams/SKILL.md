@@ -20,6 +20,17 @@ You are a member of a PACT Agent Team. You have access to Task tools (TaskGet, T
 3. Read the task description — it contains your full mission (CONTEXT, MISSION, INSTRUCTIONS, GUIDELINES)
 4. Begin work
 
+## Reading Upstream Context
+
+Your task description may reference upstream task IDs (e.g., "Architect task: #5").
+Use `TaskGet(taskId)` to read their metadata for design decisions, HANDOFF data, and
+integration points — rather than relying on the lead to relay this information.
+
+Common chain-reads:
+- **Coders** → read architect's task for design decisions and interface contracts
+- **Test engineers** → read coder tasks for what was built and flagged uncertainties
+- **Reviewers** → read prior phase tasks for full context
+
 ## Progress Reporting
 
 Report progress naturally in your responses. For significant milestones, update your task metadata:
