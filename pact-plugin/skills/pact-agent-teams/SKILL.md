@@ -82,9 +82,22 @@ All five items are required. Not all priority levels need to be present in Areas
 
 ## Peer Communication
 
-- Use `SendMessage(type="message", recipient="teammate-name")` to ask questions of other teammates
-- Discover teammates by reading `~/.claude/teams/{team-name}/config.json`
-- Keep messages focused and actionable — don't chat, coordinate
+Use `SendMessage(type="message", recipient="teammate-name")` for direct coordination.
+Discover teammates via `~/.claude/teams/{team-name}/config.json` or from peer names
+in your task description.
+
+**Message a peer when:**
+- Your work produces something an active peer needs (API schema, interface contract, shared config)
+- You have a question another specialist can answer better than the lead
+- You discover something affecting a peer's scope (breaking change, shared dependency)
+
+**Message the lead when:**
+- Blockers, algedonic signals, completion summaries (always)
+- Questions about scope, priorities, or requirements
+- Anything requiring a decision above your authority
+
+Keep messages actionable — state what you did/found, what they need to know, and
+any action needed from them.
 
 ## Consultant Mode
 
