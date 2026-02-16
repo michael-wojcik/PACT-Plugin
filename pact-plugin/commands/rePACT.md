@@ -214,7 +214,7 @@ For each specialist needed:
 
 For multi-domain: spawn multiple specialists in parallel.
 Apply S2 coordination if parallel work.
-Output: Code + HANDOFF via SendMessage to lead.
+Output: Code + HANDOFF in task metadata (summary via SendMessage to lead).
 
 ### Phase 4: Mini-Test
 

@@ -39,7 +39,7 @@ c. TaskCreate: agent task(s) as children of phase
 d. TaskUpdate: agent tasks owner = "{agent-name}"
 e. TaskUpdate: next phase addBlockedBy = [agent IDs]
 f. Spawn teammates: Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")
-g. Monitor via SendMessage (HANDOFFs) and TaskList until agents complete
+g. Monitor via SendMessage (completion summaries) and TaskList until agents complete
 h. TaskUpdate: phase status = "completed" (agents self-manage their task status)
 ```
 
@@ -180,7 +180,7 @@ Sequential execution is the exception requiring explicit justification. When ass
 
 ### Phase Transitions
 
-Lead monitors for phase completion via `SendMessage` from teammates (HANDOFF messages) and `TaskList` status. When all phase tasks are completed, create next phase's tasks and spawn next phase's teammates. Previous-phase teammates remain as consultants.
+Lead monitors for phase completion via `SendMessage` from teammates (completion summaries) and `TaskList` status. When all phase tasks are completed, create next phase's tasks and spawn next phase's teammates. Previous-phase teammates remain as consultants.
 
 ---
 
@@ -321,6 +321,7 @@ When detection fires (score >= threshold), follow the evaluation response protoc
 **Dispatch `pact-architect`**:
 1. `TaskCreate(subject="architect: design {feature}", description="CONTEXT: ...\nMISSION: ...\nINSTRUCTIONS: ...\nGUIDELINES: ...")`
    - Include task description, where to find PREPARE outputs (e.g., "Read `docs/preparation/{feature}.md`"), plan sections (if any), and plan reference.
+   - Include upstream task reference: "Preparer task: #{taskId} — read via TaskGet for research decisions and context."
    - Do not read phase output files yourself or paste their content into the task description.
    - If PREPARE was skipped: pass the plan's Preparation Phase section instead.
 2. `TaskUpdate(taskId, owner="architect")`
@@ -407,6 +408,7 @@ Before concurrent dispatch, check internally: shared files? shared interfaces? c
 For each coder needed:
 1. `TaskCreate(subject="{coder-type}: implement {scope}", description="CONTEXT: ...\nMISSION: ...\nINSTRUCTIONS: ...\nGUIDELINES: ...")`
    - Include task description, where to find ARCHITECT outputs (e.g., "Read `docs/architecture/{feature}.md`"), plan sections (if any), plan reference.
+   - Include upstream task references: "Architect task: #{taskId} — read via TaskGet for design decisions." If multiple coders are dispatched concurrently, include peer names: "Your peers on this phase: {other-coder-names}."
    - Do not read phase output files yourself or paste their content into the task description.
    - If ARCHITECT was skipped: pass the plan's Architecture Phase section instead.
    - If PREPARE/ARCHITECT were skipped, include: "PREPARE and/or ARCHITECT were skipped based on existing context. Minor decisions (naming, local structure) are yours to make. For moderate decisions (interface shape, error patterns), decide and implement but flag the decision with your rationale in the handoff so it can be validated. Major decisions affecting other components are blockers—don't implement, escalate."
@@ -472,7 +474,7 @@ Execute the [CONSOLIDATE Phase protocol](../protocols/pact-scope-phases.md#conso
 
 **Dispatch `pact-test-engineer`**:
 1. `TaskCreate(subject="test-engineer: test {feature}", description="CONTEXT: ...\nMISSION: ...\nINSTRUCTIONS: ...\nGUIDELINES: ...")`
-   - Include task description, CODE phase handoff summaries (from SendMessage, not files), plan sections (if any), plan reference.
+   - Include task description, coder task references (e.g., "Coder tasks: #{id1}, #{id2} — read via TaskGet for implementation decisions and flagged uncertainties"), plan sections (if any), plan reference.
    - Include: "You own ALL substantive testing: unit tests, integration, E2E, edge cases."
 2. `TaskUpdate(taskId, owner="test-engineer")`
 3. `Task(name="test-engineer", team_name="{team_name}", subagent_type="pact-test-engineer", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`

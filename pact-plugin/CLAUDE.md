@@ -81,6 +81,15 @@ See @~/.claude/protocols/pact-plugin/algedonic.md for full protocol, trigger con
 
 When waiting for teammates to complete their tasks, **do not narrate waiting** — saying "Waiting on X..." is a waste of your context window. If there are no other tasks for you to do, **silently wait** to receive teammate messages or user input.
 
+#### After Compaction
+
+If context was compacted, reconstruct state from the shared whiteboard:
+1. `TaskList` — see all tasks, their status, owners, and blockers
+2. `TaskGet` on tasks by priority: in-progress first (active work), then most-recent completed phase (current decisions), then earlier phases only if needed
+3. Resume orchestration from current state
+
+The Task system survives compaction. Your context window doesn't.
+
 ### Git Workflow
 - Create a feature branch before any new workstream begins
 
@@ -291,6 +300,8 @@ Explicit user override ("you code this, don't delegate") should be honored; casu
 | Before dispatching agent | `TaskCreate(subject, description, activeForm)` |
 | After dispatching agent | `TaskUpdate(taskId, status: "in_progress", addBlocks: [PARENT_TASK_ID])` |
 | Agent completes (handoff) | `TaskUpdate(taskId, status: "completed")` |
+| Reading agent's full HANDOFF | `TaskGet(taskId).metadata.handoff` (on-demand, not automatic) |
+| Creating downstream phase task | Include upstream task IDs in description for chain-read |
 | Agent reports blocker | `TaskCreate(subject: "BLOCKER: ...")` then `TaskUpdate(agent_taskId, addBlockedBy: [blocker_taskId])` |
 | Agent reports algedonic signal | `TaskCreate(subject: "[HALT\|ALERT]: ...")` then amplify scope via `addBlockedBy` on phase/feature task |
 
@@ -412,6 +423,8 @@ Use this structure in the `prompt` field to ensure agents have adequate context:
 
 **CONTEXT**
 [Brief background, what phase we are in, and relevant state]
+[Upstream task references: "Architect task: #5 — read via TaskGet for design decisions"]
+[Peer names if concurrent: "Your peers on this phase: frontend-coder, database-engineer"]
 
 **MISSION**
 [What you need the agent to do, how it will know it's completed its job]
@@ -429,7 +442,7 @@ A list of things that include the following:
 
 #### Expected Agent HANDOFF Format
 
-Every agent delivers a structured HANDOFF. Under Agent Teams, HANDOFFs arrive via SendMessage to the lead. For `pact-memory-agent`, HANDOFFs are embedded in the task response output. Expect this format:
+Every agent delivers a structured HANDOFF. Under Agent Teams, HANDOFFs are stored in task metadata (via TaskUpdate). Agents send a brief summary via SendMessage — read the full HANDOFF with `TaskGet(taskId).metadata.handoff` when needed for decisions. For `pact-memory-agent`, HANDOFFs are embedded in the task response output. Expect this format:
 
 ```
 HANDOFF:
