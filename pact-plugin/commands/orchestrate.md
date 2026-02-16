@@ -39,7 +39,7 @@ c. TaskCreate: agent task(s) as children of phase
 d. TaskUpdate: agent tasks owner = "{agent-name}"
 e. TaskUpdate: next phase addBlockedBy = [agent IDs]
 f. Spawn teammates: Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")
-g. Monitor via SendMessage (HANDOFFs) and TaskList until agents complete
+g. Monitor via SendMessage (completion summaries) and TaskList until agents complete
 h. TaskUpdate: phase status = "completed" (agents self-manage their task status)
 ```
 
@@ -180,7 +180,7 @@ Sequential execution is the exception requiring explicit justification. When ass
 
 ### Phase Transitions
 
-Lead monitors for phase completion via `SendMessage` from teammates (HANDOFF messages) and `TaskList` status. When all phase tasks are completed, create next phase's tasks and spawn next phase's teammates. Previous-phase teammates remain as consultants.
+Lead monitors for phase completion via `SendMessage` from teammates (completion summaries) and `TaskList` status. When all phase tasks are completed, create next phase's tasks and spawn next phase's teammates. Previous-phase teammates remain as consultants.
 
 ---
 
