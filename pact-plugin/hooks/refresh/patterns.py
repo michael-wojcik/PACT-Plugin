@@ -159,7 +159,7 @@ TERMINATION_SIGNALS = {
 }
 
 # Agent type patterns (for detecting Task tool calls to PACT agents)
-PACT_AGENT_PATTERN = re.compile(r"pact-(preparer|architect|backend|frontend|database|devops|n8n|security|qa|test|memory)")
+PACT_AGENT_PATTERN = re.compile(r"pact-(preparer|architect|backend-coder|frontend-coder|database-engineer|devops-engineer|n8n|security-engineer|qa-engineer|test-engineer|memory-agent)")
 
 # Tool call patterns - support both dispatch models:
 # - Background Task agent: Task(subagent_type="pact-*", run_in_background=true)

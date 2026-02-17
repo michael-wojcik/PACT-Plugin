@@ -15,7 +15,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "hooks"))
 
 from memory_prompt import PACT_AGENTS
 from memory_enforce import PACT_WORK_AGENTS
-from shared.task_utils import find_active_agents  # agent_prefixes is local; we test indirectly
+from phase_completion import CODE_PHASE_INDICATORS
+from shared.task_utils import find_active_agents  # agent_prefixes is local; we parse source
 
 from refresh.patterns import (
     WORKFLOW_PATTERNS,
@@ -424,21 +425,24 @@ class TestRegexPatternEdgeCases:
         assert pattern.search("Shall I create the PR now and push it?") is not None
 
     def test_pact_agent_pattern(self):
-        """Test PACT agent pattern matching."""
-        assert PACT_AGENT_PATTERN.search("pact-backend-coder") is not None
-        assert PACT_AGENT_PATTERN.search("pact-frontend") is not None
-        assert PACT_AGENT_PATTERN.search("pact-database") is not None
-        assert PACT_AGENT_PATTERN.search("pact-test-engineer") is not None
-        assert PACT_AGENT_PATTERN.search("pact-architect") is not None
+        """Test PACT agent pattern matching with exact full agent names."""
         assert PACT_AGENT_PATTERN.search("pact-preparer") is not None
-        assert PACT_AGENT_PATTERN.search("pact-memory") is not None
-        assert PACT_AGENT_PATTERN.search("pact-n8n") is not None
+        assert PACT_AGENT_PATTERN.search("pact-architect") is not None
+        assert PACT_AGENT_PATTERN.search("pact-backend-coder") is not None
+        assert PACT_AGENT_PATTERN.search("pact-frontend-coder") is not None
+        assert PACT_AGENT_PATTERN.search("pact-database-engineer") is not None
         assert PACT_AGENT_PATTERN.search("pact-devops-engineer") is not None
+        assert PACT_AGENT_PATTERN.search("pact-n8n") is not None
         assert PACT_AGENT_PATTERN.search("pact-security-engineer") is not None
         assert PACT_AGENT_PATTERN.search("pact-qa-engineer") is not None
+        assert PACT_AGENT_PATTERN.search("pact-test-engineer") is not None
+        assert PACT_AGENT_PATTERN.search("pact-memory-agent") is not None
 
-        # Should not match
+        # Should not match non-agent strings
         assert PACT_AGENT_PATTERN.search("other-agent") is None
+        # Should not match partial stems (tightened regex)
+        assert PACT_AGENT_PATTERN.search("pact-testing-strategies") is None
+        assert PACT_AGENT_PATTERN.search("pact-frontend-design") is None
 
     def test_task_tool_pattern(self):
         """Test Task tool pattern matching."""
@@ -579,3 +583,61 @@ class TestAgentListConsistency:
             f"Expected: {lifecycle_order_no_memory}\n"
             f"Got: {PACT_WORK_AGENTS}"
         )
+
+    @staticmethod
+    def _parse_prefixes_from_source(filepath: str, marker: str) -> list[str]:
+        """Parse agent prefix strings from a Python source file.
+
+        Finds the marker string and extracts all quoted 'pact-*:' entries
+        from the surrounding block (up to 600 chars after the marker).
+        """
+        source = Path(filepath).read_text()
+        idx = source.index(marker)
+        # Grab a generous window after the marker to capture the full literal
+        block = source[idx:idx + 600]
+        return re.findall(r'"(pact-[^"]+:)"', block)
+
+    def test_stop_audit_prefixes_match_pact_agents(self):
+        """stop_audit.py inline prefixes should match PACT_AGENTS (with colon suffix)."""
+        stop_audit_path = str(
+            Path(__file__).parent.parent / "hooks" / "stop_audit.py"
+        )
+        prefixes = self._parse_prefixes_from_source(
+            stop_audit_path, "subject.lower().startswith"
+        )
+        expected = [a + ":" for a in PACT_AGENTS]
+        assert prefixes == expected, (
+            f"stop_audit.py agent prefixes out of sync with PACT_AGENTS.\n"
+            f"Expected: {expected}\n"
+            f"Got: {prefixes}"
+        )
+
+    def test_task_utils_prefixes_match_pact_agents(self):
+        """task_utils.py agent_prefixes should match PACT_AGENTS (with colon suffix)."""
+        task_utils_path = str(
+            Path(__file__).parent.parent / "hooks" / "shared" / "task_utils.py"
+        )
+        prefixes = self._parse_prefixes_from_source(
+            task_utils_path, "agent_prefixes = ("
+        )
+        expected = [a + ":" for a in PACT_AGENTS]
+        assert prefixes == expected, (
+            f"task_utils.py agent_prefixes out of sync with PACT_AGENTS.\n"
+            f"Expected: {expected}\n"
+            f"Got: {prefixes}"
+        )
+
+    def test_code_phase_indicators_are_valid_subset(self):
+        """CODE_PHASE_INDICATORS should only contain known agent name stems."""
+        # Extract the base agent name from each indicator
+        # Indicators use both hyphen (pact-backend-coder) and underscore (pact_backend_coder) forms
+        known_stems = {a.replace("pact-", "") for a in PACT_AGENTS}
+
+        for indicator in CODE_PHASE_INDICATORS:
+            # Normalize: strip "pact-" or "pact_" prefix, convert underscores to hyphens
+            normalized = indicator.replace("pact_", "").replace("pact-", "")
+            normalized = normalized.replace("_", "-")
+            assert normalized in known_stems, (
+                f"CODE_PHASE_INDICATORS entry '{indicator}' does not correspond "
+                f"to a known PACT agent. Known stems: {sorted(known_stems)}"
+            )
