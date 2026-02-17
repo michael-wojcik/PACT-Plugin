@@ -369,9 +369,9 @@ When delegating a task, these specialist agents are available to execute PACT ph
 - **🗄️ pact-database-engineer** (Code): Data layer implementation
 - **🔧 pact-devops-engineer** (Code): CI/CD, Docker, infrastructure, build systems
 - **⚡ pact-n8n** (Code): Creates JSONs for n8n workflow automations
+- **🧪 pact-test-engineer** (Test): Testing and quality assurance
 - **🛡️ pact-security-engineer** (Review): Adversarial security code review
 - **🔍 pact-qa-engineer** (Review): Runtime verification, exploratory testing
-- **🧪 pact-test-engineer** (Test): Testing and quality assurance
 - **🧠 pact-memory-agent** (Memory): Memory management, context preservation, post-compaction recovery
 
 ### Agent Teams Dispatch
