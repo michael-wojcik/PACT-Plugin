@@ -13,6 +13,10 @@ import pytest
 import sys
 sys.path.insert(0, str(Path(__file__).parent.parent / "hooks"))
 
+from memory_prompt import PACT_AGENTS
+from memory_enforce import PACT_WORK_AGENTS
+from shared.task_utils import find_active_agents  # agent_prefixes is local; we test indirectly
+
 from refresh.patterns import (
     WORKFLOW_PATTERNS,
     TRIGGER_PATTERNS,
@@ -502,3 +506,76 @@ class TestConstants:
         """Test termination signals have expected workflow keys."""
         expected_keys = {"peer-review", "orchestrate", "plan-mode", "comPACT", "rePACT", "imPACT"}
         assert set(TERMINATION_SIGNALS.keys()) == expected_keys
+
+
+class TestAgentListConsistency:
+    """Cross-list consistency tests for hardcoded agent lists across hook modules.
+
+    Validates that PACT_AGENTS (memory_prompt), PACT_WORK_AGENTS (memory_enforce),
+    agent_prefixes (task_utils), and PACT_AGENT_PATTERN (patterns) stay in sync.
+    """
+
+    def test_work_agents_subset_of_pact_agents(self):
+        """Every agent in PACT_WORK_AGENTS should also be in PACT_AGENTS."""
+        for agent in PACT_WORK_AGENTS:
+            assert agent in PACT_AGENTS, (
+                f"{agent} is in PACT_WORK_AGENTS but missing from PACT_AGENTS"
+            )
+
+    def test_pact_agents_minus_memory_equals_work_agents(self):
+        """PACT_AGENTS minus pact-memory-agent should equal PACT_WORK_AGENTS."""
+        expected = [a for a in PACT_AGENTS if a != "pact-memory-agent"]
+        assert expected == PACT_WORK_AGENTS, (
+            f"PACT_WORK_AGENTS should be PACT_AGENTS minus pact-memory-agent.\n"
+            f"Expected: {expected}\n"
+            f"Got: {PACT_WORK_AGENTS}"
+        )
+
+    def test_pact_agent_pattern_matches_all_agents(self):
+        """PACT_AGENT_PATTERN regex should match every agent in PACT_AGENTS."""
+        for agent in PACT_AGENTS:
+            assert PACT_AGENT_PATTERN.search(agent) is not None, (
+                f"PACT_AGENT_PATTERN does not match '{agent}'"
+            )
+
+    def test_pact_agents_ordering_matches_lifecycle(self):
+        """Agent lists should follow the lifecycle ordering convention."""
+        # Canonical lifecycle order (from CLAUDE.md roster)
+        lifecycle_order = [
+            "pact-preparer",
+            "pact-architect",
+            "pact-backend-coder",
+            "pact-frontend-coder",
+            "pact-database-engineer",
+            "pact-devops-engineer",
+            "pact-n8n",
+            "pact-security-engineer",
+            "pact-qa-engineer",
+            "pact-test-engineer",
+            "pact-memory-agent",
+        ]
+        assert PACT_AGENTS == lifecycle_order, (
+            f"PACT_AGENTS not in lifecycle order.\n"
+            f"Expected: {lifecycle_order}\n"
+            f"Got: {PACT_AGENTS}"
+        )
+
+    def test_work_agents_ordering_matches_lifecycle(self):
+        """PACT_WORK_AGENTS should follow lifecycle ordering (minus memory-agent)."""
+        lifecycle_order_no_memory = [
+            "pact-preparer",
+            "pact-architect",
+            "pact-backend-coder",
+            "pact-frontend-coder",
+            "pact-database-engineer",
+            "pact-devops-engineer",
+            "pact-n8n",
+            "pact-security-engineer",
+            "pact-qa-engineer",
+            "pact-test-engineer",
+        ]
+        assert PACT_WORK_AGENTS == lifecycle_order_no_memory, (
+            f"PACT_WORK_AGENTS not in lifecycle order.\n"
+            f"Expected: {lifecycle_order_no_memory}\n"
+            f"Got: {PACT_WORK_AGENTS}"
+        )

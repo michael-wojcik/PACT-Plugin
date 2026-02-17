@@ -29,7 +29,10 @@ if str(_hooks_dir) not in sys.path:
 from shared.task_utils import get_task_list
 
 
-# Indicators that CODE phase work was performed (for transcript fallback)
+# Indicators that CODE phase work was performed (for transcript fallback).
+# Note: pact-security-engineer and pact-qa-engineer are Review phase agents,
+# not CODE phase agents. If post-CODE reminders for QA/security review are
+# needed in the future, add a separate REVIEW_PHASE_INDICATORS list.
 CODE_PHASE_INDICATORS = [
     "pact-backend-coder",
     "pact-frontend-coder",

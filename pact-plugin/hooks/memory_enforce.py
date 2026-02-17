@@ -35,10 +35,10 @@ PACT_WORK_AGENTS = [
     "pact-frontend-coder",
     "pact-database-engineer",
     "pact-devops-engineer",
-    "pact-test-engineer",
     "pact-n8n",
     "pact-security-engineer",
     "pact-qa-engineer",
+    "pact-test-engineer",
 ]
 
 # Patterns indicating meaningful work was done

@@ -68,7 +68,7 @@ If the first word isn't a recognized shorthand, treat the entire argument as the
   - DevOps: CI/CD, Docker, Dockerfile, pipeline, deploy, infrastructure, Terraform, Makefile, GitHub Actions, workflow, container, Pulumi, CloudFormation
   - Security: vulnerability, CVE, injection, XSS, auth bypass, security audit, penetration, OWASP, secrets, credential
   - QA: runtime, exploratory, browser, Playwright, visual, smoke test, manual test, visual regression, user flow
-- Task mentions specific file types (.tsx, .jsx, .sql, .spec.ts, .yml, .yaml, Dockerfile, .sh, etc.)
+- Task mentions specific file types (.tsx, .jsx, .sql, .spec.ts, .yml, .yaml, Dockerfile, .sh, .tf, .toml, etc.)
 - Proceed immediately: "Delegating to [specialist]..."
 
 **Ask when ambiguous**:
