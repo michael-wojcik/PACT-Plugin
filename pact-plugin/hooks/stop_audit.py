@@ -63,7 +63,11 @@ def audit_tasks(tasks: list[dict[str, Any]]) -> list[str]:
             "pact-backend-coder:",
             "pact-frontend-coder:",
             "pact-database-engineer:",
+            "pact-devops-engineer:",
+            "pact-n8n:",
             "pact-test-engineer:",
+            "pact-security-engineer:",
+            "pact-qa-engineer:",
             "pact-memory-agent:",
         )):
             orphaned_agents.append(task)

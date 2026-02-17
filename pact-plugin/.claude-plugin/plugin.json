@@ -1,6 +1,6 @@
 {
   "name": "PACT",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "description": "PACT Framework - Prepare, Architect, Code, Test methodology with VSM-enhanced orchestration, specialist agents, and viability sensing for systematic AI-assisted development",
   "author": {
     "name": "ProfSynapse",
@@ -38,8 +38,11 @@
     "./agents/pact-backend-coder.md",
     "./agents/pact-frontend-coder.md",
     "./agents/pact-database-engineer.md",
+    "./agents/pact-devops-engineer.md",
     "./agents/pact-n8n.md",
     "./agents/pact-test-engineer.md",
+    "./agents/pact-security-engineer.md",
+    "./agents/pact-qa-engineer.md",
     "./agents/pact-memory-agent.md"
   ],
   "skills": "./skills/"

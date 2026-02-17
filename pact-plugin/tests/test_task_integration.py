@@ -442,9 +442,12 @@ class TestFindActiveAgents:
             "pact-backend-coder:",
             "pact-frontend-coder:",
             "pact-database-engineer:",
-            "pact-test-engineer:",
-            "pact-memory-agent:",
+            "pact-devops-engineer:",
             "pact-n8n:",
+            "pact-test-engineer:",
+            "pact-security-engineer:",
+            "pact-qa-engineer:",
+            "pact-memory-agent:",
         ]
 
         for prefix in agent_prefixes:

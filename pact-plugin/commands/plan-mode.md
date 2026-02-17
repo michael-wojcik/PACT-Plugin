@@ -83,7 +83,10 @@ Determine which specialists to invoke based on the task:
 - **💻 pact-backend-coder**: Include if server-side work is involved
 - **🎨 pact-frontend-coder**: Include if client-side work is involved
 - **🗄️ pact-database-engineer**: Include if data layer work is involved
+- **🔧 pact-devops-engineer**: Include if CI/CD, Docker, infrastructure, or build system work is involved
 - **🧪 pact-test-engineer**: Always include for testing strategy
+- **🛡️ pact-security-engineer**: Include if auth, security, or sensitive data handling is involved
+- **🔍 pact-qa-engineer**: Include if project has a runnable app and UI/user-facing behavior is affected
 
 Skip specialists clearly not relevant (e.g., skip database engineer for pure UI work).
 
@@ -150,7 +153,7 @@ For **🏛️ pact-architect**, also ask:
 - What design patterns should be applied?
 - What interface contracts need definition?
 
-For **coders** (backend/frontend/database), also ask:
+For **coders** (backend/frontend/database/devops), also ask:
 - What files need modification or creation?
 - What existing patterns in the codebase should be followed?
 - What's the implementation sequence?
@@ -159,6 +162,16 @@ For **🧪 pact-test-engineer**, also ask:
 - What test scenarios are critical (happy path, errors, edge cases)?
 - What coverage targets make sense?
 - What test data or fixtures are needed?
+
+For **🛡️ pact-security-engineer**, also ask:
+- What threat vectors are relevant to this feature?
+- What auth/authorization patterns need consideration?
+- What input validation or data protection requirements exist?
+
+For **🔍 pact-qa-engineer**, also ask:
+- What user flows need runtime verification?
+- What pages or interactions are affected?
+- What runtime edge cases should be explored (empty states, error states)?
 
 **Handling incomplete or missing responses**:
 
