@@ -28,7 +28,7 @@ Skill tool: skill="pact-testing-strategies"
 
 **Why this matters**: Your context is isolated from the orchestrator. Skills loaded elsewhere don't transfer to you. You must load them yourself.
 
-**Cross-Agent Coordination**: Read [pact-phase-transitions.md](../protocols/pact-phase-transitions.md) for workflow handoffs and phase boundaries.
+**Cross-Agent Coordination**: Read [pact-phase-transitions.md](../protocols/pact-phase-transitions.md) for workflow handoffs and phase boundaries. See [pact-s2-coordination.md](../protocols/pact-s2-coordination.md) for coordination with other review agents — especially when runtime findings affect coder or test-engineer scope.
 
 ## DISTINCTION FROM TEST ENGINEER
 

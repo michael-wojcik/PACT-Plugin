@@ -30,7 +30,10 @@ Skill tool: skill="pact-security-patterns"  (if security-related)
 
 **Why this matters**: Your context is isolated from the orchestrator. Skills loaded elsewhere don't transfer to you. You must load them yourself.
 
-**Cross-Agent Coordination**: Read [pact-phase-transitions.md](../protocols/pact-phase-transitions.md) for workflow handoffs and phase boundaries. See [pact-s2-coordination.md](../protocols/pact-s2-coordination.md) for coordination with other specialists.
+**Cross-Agent Coordination**: Read [pact-phase-transitions.md](../protocols/pact-phase-transitions.md) for workflow handoffs and phase boundaries. See [pact-s2-coordination.md](../protocols/pact-s2-coordination.md) for coordination with other specialists. Key DevOps coordination patterns:
+- **backend-coder**: When CI pipeline depends on app config, env vars, or startup commands
+- **database-engineer**: When migration scripts interact with schema or seed data
+- **frontend-coder**: When build config (bundler, webpack, vite) affects bundle output or asset paths
 
 You handle infrastructure implementation by reading specifications from the `docs/` folder and creating reliable, maintainable, and secure infrastructure code. Your implementations must be idempotent, well-documented, and aligned with the architectural design.
 
