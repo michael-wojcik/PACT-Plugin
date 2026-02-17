@@ -52,6 +52,8 @@ Create a review Task hierarchy:
 ├── [Agent] "architect: design review"
 ├── [Agent] "test-engineer: coverage review"
 ├── [Agent] "backend-coder: implementation review"
+├── [Agent] "security-engineer: security review" (conditional)
+├── [Agent] "qa-engineer: runtime verification" (conditional)
 ├── [Remediation] (dynamic, for major issues)
 │   └── [Agent] "fix: auth vulnerability"
 ├── [Step] "User: review minor issues"
@@ -101,15 +103,20 @@ After remediation fixes are applied, re-review is **verify-only** — not a fres
 
 Pull request reviews should mirror real-world team practices where multiple reviewers sign off before merging. Dispatch **at least 3 reviewers in parallel** to provide comprehensive review coverage:
 
-Standard reviewer combination:
+Standard reviewer combination (always included):
 - **pact-architect**: Design coherence, architectural patterns, interface contracts, separation of concerns
 - **pact-test-engineer**: Test coverage, testability, performance implications, edge cases
 - **Domain specialist coder** (selected below): Implementation quality specific to the domain
+
+Conditional reviewers (included when relevant):
+- **pact-security-engineer**: When PR touches auth/authorization, user input handling, API endpoints, data serialization, or crypto/token code
+- **pact-qa-engineer**: When project has a runnable dev server and PR includes UI or user-facing changes
 
 Select the domain coder based on PR focus:
 - Frontend changes → **pact-frontend-coder** (UI implementation quality, accessibility, state management)
 - Backend changes → **pact-backend-coder** (Server-side implementation quality, API design, error handling)
 - Database changes → **pact-database-engineer** (Query efficiency, schema design, data integrity)
+- Infrastructure changes → **pact-devops-engineer** (CI/CD quality, Docker best practices, script safety)
 - Multiple domains → Coder for domain with most significant changes, or all relevant domain coders if changes are equally significant
 
 **Dispatch reviewers**:
