@@ -10,9 +10,13 @@ Tests cover:
 4. Edit outside worktree to docs/ → allow (documentation)
 5. No PACT_WORKTREE_PATH set → allow (inactive, no-op)
 6. CLAUDE.md always allowed
+7. main() entry point: stdin JSON parsing, exit codes, output format
 """
+import io
+import json
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -76,3 +80,72 @@ class TestWorktreeGuard:
             worktree_path="/tmp/worktrees/feat-auth"
         )
         assert result is None
+
+
+class TestMainEntryPoint:
+    """Tests for worktree_guard.main() stdin/stdout/exit behavior."""
+
+    def test_main_exits_0_when_no_worktree_path(self):
+        from worktree_guard import main
+
+        with patch.dict("os.environ", {}, clear=True):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0
+
+    def test_main_exits_0_when_edit_inside_worktree(self):
+        from worktree_guard import main
+
+        input_data = json.dumps({
+            "tool_input": {"file_path": "/tmp/worktrees/feat-auth/src/auth.ts"}
+        })
+
+        with patch.dict("os.environ", {"PACT_WORKTREE_PATH": "/tmp/worktrees/feat-auth"}), \
+             patch("worktree_guard.check_worktree_boundary", return_value=None), \
+             patch("sys.stdin", io.StringIO(input_data)):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0
+
+    def test_main_exits_2_when_edit_outside_worktree(self, capsys):
+        from worktree_guard import main
+
+        input_data = json.dumps({
+            "tool_input": {"file_path": "/Users/mj/project/src/auth.ts"}
+        })
+
+        error_msg = "File is outside worktree boundary"
+        with patch.dict("os.environ", {"PACT_WORKTREE_PATH": "/tmp/worktrees/feat-auth"}), \
+             patch("worktree_guard.check_worktree_boundary", return_value=error_msg), \
+             patch("sys.stdin", io.StringIO(input_data)):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 2
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+        assert output["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+    def test_main_exits_0_on_invalid_json(self):
+        from worktree_guard import main
+
+        with patch.dict("os.environ", {"PACT_WORKTREE_PATH": "/tmp/worktrees/feat-auth"}), \
+             patch("sys.stdin", io.StringIO("not json")):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0
+
+    def test_main_exits_0_when_no_file_path(self):
+        from worktree_guard import main
+
+        input_data = json.dumps({"tool_input": {}})
+
+        with patch.dict("os.environ", {"PACT_WORKTREE_PATH": "/tmp/worktrees/feat-auth"}), \
+             patch("sys.stdin", io.StringIO(input_data)):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0

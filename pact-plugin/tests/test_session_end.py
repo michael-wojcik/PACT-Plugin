@@ -14,7 +14,9 @@ Tests cover:
 8. Includes incomplete tasks with status
 9. Handles empty task list gracefully
 10. Handles None task list gracefully
+11. main() entry point: exit codes and error handling
 """
+import io
 import json
 import sys
 from pathlib import Path
@@ -271,3 +273,74 @@ class TestWriteSessionSnapshot:
         content = (tmp_path / "blocker-proj" / "last-session.md").read_text()
         assert "## Unresolved" in content
         assert "#10 BLOCKER: missing API key" in content
+
+
+class TestMainEntryPoint:
+    """Tests for session_end.main() exit behavior."""
+
+    def test_main_exits_0_on_success(self):
+        from session_end import main
+
+        env = {
+            "CLAUDE_CODE_TEAM_NAME": "PACT-test",
+            "CLAUDE_PROJECT_DIR": "/Users/mj/project",
+        }
+
+        with patch.dict("os.environ", env, clear=True), \
+             patch("session_end.log_session_metadata"), \
+             patch("session_end.get_task_list", return_value=[]), \
+             patch("session_end.write_session_snapshot"):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0
+
+    def test_main_exits_0_on_exception(self):
+        """main() should exit 0 even on errors (fire-and-forget)."""
+        from session_end import main
+
+        env = {
+            "CLAUDE_CODE_TEAM_NAME": "PACT-test",
+            "CLAUDE_PROJECT_DIR": "/Users/mj/project",
+        }
+
+        with patch.dict("os.environ", env, clear=True), \
+             patch("session_end.log_session_metadata", side_effect=RuntimeError("boom")):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0
+
+    def test_main_exits_0_when_no_env_vars(self):
+        from session_end import main
+
+        with patch.dict("os.environ", {}, clear=True), \
+             patch("session_end.log_session_metadata"), \
+             patch("session_end.get_task_list", return_value=None), \
+             patch("session_end.write_session_snapshot"):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0
+
+    def test_main_calls_write_snapshot_with_tasks(self):
+        from session_end import main
+
+        env = {
+            "CLAUDE_CODE_TEAM_NAME": "PACT-test",
+            "CLAUDE_PROJECT_DIR": "/Users/mj/Sites/my-project",
+        }
+
+        mock_tasks = [{"id": "1", "subject": "test", "status": "completed", "metadata": {}}]
+
+        with patch.dict("os.environ", env, clear=True), \
+             patch("session_end.log_session_metadata"), \
+             patch("session_end.get_task_list", return_value=mock_tasks), \
+             patch("session_end.write_session_snapshot") as mock_snapshot:
+            with pytest.raises(SystemExit):
+                main()
+
+        mock_snapshot.assert_called_once()
+        call_args = mock_snapshot.call_args
+        assert call_args.kwargs["tasks"] == mock_tasks
+        assert call_args.kwargs["project_slug"] == "my-project"

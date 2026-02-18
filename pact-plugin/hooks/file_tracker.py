@@ -18,6 +18,12 @@ import sys
 import time
 from pathlib import Path
 
+try:
+    import fcntl
+    HAS_FLOCK = True
+except ImportError:
+    HAS_FLOCK = False
+
 
 def track_edit(
     file_path: str,
@@ -27,23 +33,39 @@ def track_edit(
 ) -> None:
     """Append a file edit record to the tracking file."""
     tracking_file = Path(tracking_path)
+    tracking_file.parent.mkdir(parents=True, exist_ok=True)
 
-    entries = []
-    if tracking_file.exists():
-        try:
-            entries = json.loads(tracking_file.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, IOError):
-            entries = []
-
-    entries.append({
+    new_entry = {
         "file": file_path,
         "agent": agent_name,
         "tool": tool_name,
         "ts": int(time.time()),
-    })
+    }
 
-    tracking_file.parent.mkdir(parents=True, exist_ok=True)
-    tracking_file.write_text(json.dumps(entries), encoding="utf-8")
+    # Use file locking to prevent concurrent write corruption
+    if HAS_FLOCK:
+        with open(tracking_file, "a+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.seek(0)
+                content = f.read()
+                entries = json.loads(content) if content.strip() else []
+            except (json.JSONDecodeError, IOError):
+                entries = []
+            entries.append(new_entry)
+            f.seek(0)
+            f.truncate()
+            f.write(json.dumps(entries))
+            fcntl.flock(f, fcntl.LOCK_UN)
+    else:
+        entries = []
+        if tracking_file.exists():
+            try:
+                entries = json.loads(tracking_file.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, IOError):
+                entries = []
+        entries.append(new_entry)
+        tracking_file.write_text(json.dumps(entries), encoding="utf-8")
 
 
 def check_conflict(

@@ -8,7 +8,9 @@ Tests cover:
 3. Task call without team_name -> allow (always, no check needed)
 4. Non-Task tool call -> allow (hook shouldn't even fire, but graceful no-op)
 5. Missing CLAUDE_CODE_TEAM_NAME env var -> allow (no team context)
+6. main() entry point: stdin JSON parsing, exit codes, output format
 """
+import io
 import json
 import sys
 from pathlib import Path
@@ -67,3 +69,66 @@ class TestTeamGuard:
         )
 
         assert result is None
+
+
+class TestMainEntryPoint:
+    """Tests for team_guard.main() stdin/stdout/exit behavior."""
+
+    def test_main_exits_0_when_team_exists(self, tmp_path):
+        from team_guard import main
+
+        # Create team directory with config
+        team_dir = tmp_path / "PACT-test"
+        team_dir.mkdir(parents=True)
+        (team_dir / "config.json").write_text('{"members": []}')
+
+        input_data = json.dumps({
+            "tool_input": {"team_name": "PACT-test"}
+        })
+
+        with patch("team_guard.check_team_exists", return_value=None), \
+             patch("sys.stdin", io.StringIO(input_data)):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0
+
+    def test_main_exits_2_when_team_missing(self, capsys):
+        from team_guard import main
+
+        input_data = json.dumps({
+            "tool_input": {"team_name": "PACT-nonexistent"}
+        })
+
+        error_msg = "Team 'PACT-nonexistent' does not exist yet."
+        with patch("team_guard.check_team_exists", return_value=error_msg), \
+             patch("sys.stdin", io.StringIO(input_data)):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 2
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+        assert output["hookSpecificOutput"]["permissionDecision"] == "deny"
+
+    def test_main_exits_0_on_invalid_json(self):
+        from team_guard import main
+
+        with patch("sys.stdin", io.StringIO("not json")):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0
+
+    def test_main_exits_0_when_no_team_name(self):
+        from team_guard import main
+
+        input_data = json.dumps({
+            "tool_input": {"prompt": "explore codebase"}
+        })
+
+        with patch("sys.stdin", io.StringIO(input_data)):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+
+        assert exc_info.value.code == 0

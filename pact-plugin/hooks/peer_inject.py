@@ -21,6 +21,7 @@ from pathlib import Path
 def get_peer_context(
     agent_type: str,
     team_name: str,
+    agent_name: str = "",
     teams_dir: str | None = None,
 ) -> str | None:
     """
@@ -29,6 +30,7 @@ def get_peer_context(
     Args:
         agent_type: The spawning agent's type (e.g., "pact-backend-coder")
         team_name: Current team name
+        agent_name: The spawning agent's unique name (e.g., "backend-coder-1")
         teams_dir: Override for teams directory (for testing)
 
     Returns:
@@ -51,8 +53,14 @@ def get_peer_context(
 
     members = config.get("members", [])
 
-    # Filter out the agent being spawned (match by agentType)
-    peers = [m["name"] for m in members if m.get("agentType") != agent_type]
+    if agent_name:
+        # Filter by exact name — excludes only the spawning agent itself
+        peers = [m["name"] for m in members if m.get("name") != agent_name]
+    else:
+        # Fallback: filter by agentType. This excludes ALL agents of the same
+        # type, not just the spawning agent. This is a known limitation when
+        # the hook input does not include agent_name/agent_id.
+        peers = [m["name"] for m in members if m.get("agentType") != agent_type]
 
     if not peers:
         return "You are the only active teammate on this team."
@@ -71,11 +79,13 @@ def main():
         sys.exit(0)
 
     agent_type = input_data.get("agent_type", "")
+    agent_name = input_data.get("agent_name", "") or input_data.get("agent_id", "")
     team_name = os.environ.get("CLAUDE_CODE_TEAM_NAME", "")
 
     context = get_peer_context(
         agent_type=agent_type,
         team_name=team_name,
+        agent_name=agent_name,
     )
 
     if context:

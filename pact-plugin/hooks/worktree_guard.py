@@ -36,9 +36,18 @@ APP_CODE_EXTENSIONS = {
 
 
 def is_allowed_path(file_path: str) -> bool:
-    """Check if path is in the allow-list (always permitted)."""
+    """Check if path is in the allow-list (always permitted).
+
+    Uses path component matching instead of substring matching to avoid
+    false positives (e.g., a directory named 'mydocs' matching '/docs/').
+    """
+    p = Path(file_path)
+    parts = p.parts
+    name = p.name
     for pattern in ALLOW_PATTERNS:
-        if pattern in file_path:
+        clean = pattern.strip("/")
+        # Match as path component (e.g., ".claude", "docs") or filename (e.g., "CLAUDE.md")
+        if clean in parts or name == clean:
             return True
     return False
 

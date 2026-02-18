@@ -15,6 +15,7 @@ Output: stderr message on block (exit 2), nothing on allow (exit 0)
 """
 
 import json
+import re
 import sys
 import os
 from pathlib import Path
@@ -99,6 +100,11 @@ def read_task_metadata(task_id: str, team_name: str | None, tasks_base_dir: str 
     if not task_id:
         return {}
 
+    # Sanitize task_id to prevent path traversal
+    task_id = re.sub(r'[/\\]|\.\.', '', task_id)
+    if not task_id:
+        return {}
+
     if tasks_base_dir is None:
         tasks_base_dir = str(Path.home() / ".claude" / "tasks")
 
@@ -133,8 +139,13 @@ def main():
     teammate_name = input_data.get("teammate_name")
     team_name = input_data.get("team_name") or os.environ.get("CLAUDE_CODE_TEAM_NAME", "")
 
-    # Read task metadata from file
-    task_metadata = read_task_metadata(task_id, team_name)
+    # Prefer metadata from hook input if available (avoids file I/O).
+    # As of 2026-02, TaskCompleted input does not include a metadata field —
+    # only task_id, task_subject, task_description, teammate_name, team_name.
+    # Fall back to reading from the task file on disk.
+    task_metadata = input_data.get("metadata")
+    if task_metadata is None:
+        task_metadata = read_task_metadata(task_id, team_name)
 
     error = validate_task_handoff(
         task_subject=task_subject,

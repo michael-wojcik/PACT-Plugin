@@ -18,6 +18,14 @@ restore_last_session():
 11. Rotates file to last-session.prev.md
 12. Returns None if project_slug is empty
 13. Returns None if snapshot file is empty
+
+check_resumption_context():
+14. Returns None when no in_progress or pending tasks
+15. Returns feature task names
+16. Returns phase names
+17. Returns agent count
+18. Returns blocker count in system message format
+19. Mixed task types
 """
 
 import re
@@ -262,3 +270,129 @@ class TestRestoreLastSession:
 
         # Prev file should have new content, not old
         assert (proj_dir / "last-session.prev.md").read_text() == new_content
+
+
+class TestCheckResumptionContext:
+    """Tests for check_resumption_context() -- resumption detection."""
+
+    def test_returns_none_when_no_active_tasks(self):
+        """Should return None when all tasks are completed."""
+        from session_init import check_resumption_context
+
+        tasks = [
+            {"id": "1", "subject": "auth feature", "status": "completed", "metadata": {}},
+            {"id": "2", "subject": "PREPARE: research", "status": "completed", "metadata": {}},
+        ]
+
+        result = check_resumption_context(tasks)
+
+        assert result is None
+
+    def test_returns_none_when_empty_list(self):
+        """Should return None for empty task list."""
+        from session_init import check_resumption_context
+
+        result = check_resumption_context([])
+
+        assert result is None
+
+    def test_returns_feature_task_names(self):
+        """Should include feature task names in resumption context."""
+        from session_init import check_resumption_context
+
+        tasks = [
+            {"id": "1", "subject": "Implement auth system", "status": "in_progress", "metadata": {}},
+        ]
+
+        result = check_resumption_context(tasks)
+
+        assert result is not None
+        assert "Features:" in result
+        assert "Implement auth system" in result
+
+    def test_returns_phase_names(self):
+        """Should include phase names in resumption context."""
+        from session_init import check_resumption_context
+
+        tasks = [
+            {"id": "2", "subject": "ARCHITECT: design", "status": "in_progress", "metadata": {}},
+        ]
+
+        result = check_resumption_context(tasks)
+
+        assert result is not None
+        assert "Phases:" in result
+        assert "ARCHITECT" in result
+
+    def test_returns_agent_count(self):
+        """Should include count of active agents."""
+        from session_init import check_resumption_context
+
+        tasks = [
+            {"id": "3", "subject": "pact-backend-coder", "status": "in_progress", "metadata": {}},
+            {"id": "4", "subject": "pact-frontend-coder", "status": "in_progress", "metadata": {}},
+        ]
+
+        result = check_resumption_context(tasks)
+
+        assert result is not None
+        assert "Active agents: 2" in result
+
+    def test_returns_blocker_count(self):
+        """Should include blocker count with bold formatting."""
+        from session_init import check_resumption_context
+
+        tasks = [
+            {
+                "id": "5",
+                "subject": "BLOCKER: missing API key",
+                "status": "in_progress",
+                "metadata": {"type": "blocker"},
+            },
+        ]
+
+        result = check_resumption_context(tasks)
+
+        assert result is not None
+        assert "**Blockers: 1**" in result
+
+    def test_mixed_task_types(self):
+        """Should handle mix of feature, phase, agent, and blocker tasks."""
+        from session_init import check_resumption_context
+
+        tasks = [
+            {"id": "1", "subject": "Implement auth", "status": "in_progress", "metadata": {}},
+            {"id": "2", "subject": "CODE: backend", "status": "in_progress", "metadata": {}},
+            {"id": "3", "subject": "pact-backend-coder", "status": "in_progress", "metadata": {}},
+            {
+                "id": "4",
+                "subject": "BLOCKER: missing key",
+                "status": "in_progress",
+                "metadata": {"type": "blocker"},
+            },
+            {"id": "5", "subject": "TEST: write tests", "status": "pending", "metadata": {}},
+        ]
+
+        result = check_resumption_context(tasks)
+
+        assert result is not None
+        assert "Features:" in result
+        assert "Phases:" in result
+        assert "Active agents: 1" in result
+        assert "**Blockers: 1**" in result
+        assert "(1 pending)" in result
+
+    def test_includes_pending_count(self):
+        """Should append pending count when pending tasks exist."""
+        from session_init import check_resumption_context
+
+        tasks = [
+            {"id": "1", "subject": "Implement auth", "status": "in_progress", "metadata": {}},
+            {"id": "2", "subject": "TEST: coverage", "status": "pending", "metadata": {}},
+            {"id": "3", "subject": "Review: PR", "status": "pending", "metadata": {}},
+        ]
+
+        result = check_resumption_context(tasks)
+
+        assert result is not None
+        assert "(2 pending)" in result

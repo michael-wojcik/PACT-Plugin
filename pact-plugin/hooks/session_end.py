@@ -21,6 +21,12 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 
+try:
+    import fcntl
+    HAS_FLOCK = True
+except ImportError:
+    HAS_FLOCK = False
+
 # Add hooks directory to path for shared package imports
 _hooks_dir = Path(__file__).parent
 if str(_hooks_dir) not in sys.path:
@@ -46,26 +52,38 @@ def log_session_metadata(
         log_path = str(Path.home() / ".claude" / "pact-session-log.json")
 
     log_file = Path(log_path)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
 
-    # Read existing entries
-    entries = []
-    if log_file.exists():
-        try:
-            entries = json.loads(log_file.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, IOError):
-            entries = []
-
-    # Append new entry
     entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "project_slug": project_slug,
         "team_name": team_name,
     }
-    entries.append(entry)
 
-    # Write back
-    log_file.parent.mkdir(parents=True, exist_ok=True)
-    log_file.write_text(json.dumps(entries, indent=2), encoding="utf-8")
+    # Use file locking to prevent concurrent write corruption
+    if HAS_FLOCK:
+        with open(log_file, "a+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.seek(0)
+                content = f.read()
+                entries = json.loads(content) if content.strip() else []
+            except (json.JSONDecodeError, IOError):
+                entries = []
+            entries.append(entry)
+            f.seek(0)
+            f.truncate()
+            f.write(json.dumps(entries, indent=2))
+            fcntl.flock(f, fcntl.LOCK_UN)
+    else:
+        entries = []
+        if log_file.exists():
+            try:
+                entries = json.loads(log_file.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, IOError):
+                entries = []
+        entries.append(entry)
+        log_file.write_text(json.dumps(entries, indent=2), encoding="utf-8")
 
 
 def get_project_slug() -> str:
