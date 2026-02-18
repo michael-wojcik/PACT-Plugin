@@ -38,10 +38,13 @@ b. Analyze work needed (QDCL for CODE)
 c. TaskCreate: agent task(s) as children of phase
 d. TaskUpdate: agent tasks owner = "{agent-name}"
 e. TaskUpdate: next phase addBlockedBy = [agent IDs]
-f. Spawn teammates: Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")
-g. Monitor via SendMessage (completion summaries) and TaskList until agents complete
-h. TaskUpdate: phase status = "completed" (agents self-manage their task status)
+f. Spawn teammates: Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="...")
+g. Store agent IDs: TaskUpdate(taskId, metadata={"agent_id": "{id_from_Task_return}"})
+h. Monitor via SendMessage (completion summaries) and TaskList until agents complete
+i. TaskUpdate: phase status = "completed" (agents self-manage their task status)
 ```
+
+> **Why store agent_id?** Enables `resume` for blocker recovery — see [Blocker Recovery](#blocker-recovery-resume-vs-fresh-spawn).
 
 **Skipped phases**: Mark directly `completed` (no `in_progress` — no work occurs):
 `TaskUpdate(phaseTaskId, status="completed", metadata={"skipped": true, "skip_reason": "{reason}"})`
@@ -325,7 +328,13 @@ When detection fires (score >= threshold), follow the evaluation response protoc
    - Do not read phase output files yourself or paste their content into the task description.
    - If PREPARE was skipped: pass the plan's Preparation Phase section instead.
 2. `TaskUpdate(taskId, owner="architect")`
-3. `Task(name="architect", team_name="{team_name}", subagent_type="pact-architect", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`
+3. `Task(name="architect", team_name="{team_name}", subagent_type="pact-architect", mode="plan", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`
+
+**Plan mode workflow**: The architect spawns in read-only plan mode. After exploring the codebase and designing the architecture, the architect calls `ExitPlanMode` which sends a `plan_approval_request` to the lead. The lead reviews and responds via `plan_approval_response`:
+- **Approve**: Architect exits plan mode and produces architecture artifacts in `docs/architecture/`
+- **Reject with feedback**: Architect revises the plan and resubmits via `ExitPlanMode`
+
+> **Note**: Plan mode applies only in the `orchestrate` workflow. comPACT dispatches skip plan mode (light ceremony).
 
 Completed-phase teammates remain as consultants. Do not shutdown during this workflow.
 
@@ -504,6 +513,25 @@ Monitor for blocker/algedonic signals via:
 - After each agent dispatch, when agent reports completion, on any unexpected stoppage
 
 On signal detected: Follow Signal Task Handling in CLAUDE.md.
+
+### Blocker Recovery: Resume vs. Fresh Spawn
+
+When a blocker is resolved, prefer resuming the original agent over spawning fresh — this preserves the agent's accumulated context.
+
+**Decision matrix**:
+
+| Situation | Action | Rationale |
+|-----------|--------|-----------|
+| Blocker resolved, agent had significant partial work | `resume` | Preserve context |
+| Blocker resolved, agent's approach was wrong | Fresh spawn | Clean slate needed |
+| Agent hit `maxTurns` limit | Fresh spawn | Agent was likely looping |
+| Agent shut down for lifecycle cleanup | Fresh spawn | Context is stale |
+
+**Resume pattern**:
+1. Read agent ID from task metadata: `TaskGet(taskId).metadata.agent_id`
+2. Resume with blocker context: `Task(resume="{agent_id}", prompt="Blocker resolved: {details}. Continue your task.")`
+
+**Fresh spawn pattern** (when resume is inappropriate): Follow the standard dispatch pattern (TaskCreate + TaskUpdate + Task with name/team_name/subagent_type).
 
 ---
 
