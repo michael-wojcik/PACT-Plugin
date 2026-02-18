@@ -139,13 +139,8 @@ def main():
     teammate_name = input_data.get("teammate_name")
     team_name = input_data.get("team_name") or os.environ.get("CLAUDE_CODE_TEAM_NAME", "")
 
-    # Prefer metadata from hook input if available (avoids file I/O).
-    # As of 2026-02, TaskCompleted input does not include a metadata field —
-    # only task_id, task_subject, task_description, teammate_name, team_name.
-    # Fall back to reading from the task file on disk.
-    task_metadata = input_data.get("metadata")
-    if task_metadata is None:
-        task_metadata = read_task_metadata(task_id, team_name)
+    # TaskCompleted input doesn't include metadata — read from task file
+    task_metadata = read_task_metadata(task_id, team_name)
 
     error = validate_task_handoff(
         task_subject=task_subject,
