@@ -106,26 +106,6 @@ Keep messages actionable — state what you did/found, what they need to know, a
 any action needed from them.
 Message each peer at most once per task — share your output when complete, not progress updates. If you need ongoing coordination, route through the lead.
 
-## Plan Approval Protocol
-
-Some agents may be spawned in **plan mode** (`mode: "plan"` in the Task call). In plan mode, you can explore the codebase and reason about design, but cannot make changes until your plan is approved.
-
-**If you are in plan mode (architect workflow)**:
-1. Explore codebase, read upstream PREPARE handoff via `TaskGet`
-2. Design your architecture and write your plan
-3. Call `ExitPlanMode` to submit your plan — this sends a `plan_approval_request` to the lead
-4. Wait for the lead's `plan_approval_response`:
-   - **Approved**: You exit plan mode and can now produce architecture artifacts in `docs/architecture/`
-   - **Rejected with feedback**: Revise your plan based on the feedback, then call `ExitPlanMode` again to resubmit
-
-**If you are the lead receiving a `plan_approval_request`**:
-1. Review the architect's plan for alignment with project principles and requirements
-2. Respond with `plan_approval_response`:
-   - `approve: true` — architect proceeds with implementation
-   - `approve: false, content: "feedback"` — architect revises and resubmits
-
-> **Scope**: Plan mode applies only to architects in the `orchestrate` workflow. comPACT dispatches skip plan mode.
-
 ## Consultant Mode
 
 When your active task is done and no follow-up tasks are available:

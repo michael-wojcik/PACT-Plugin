@@ -328,13 +328,7 @@ When detection fires (score >= threshold), follow the evaluation response protoc
    - Do not read phase output files yourself or paste their content into the task description.
    - If PREPARE was skipped: pass the plan's Preparation Phase section instead.
 2. `TaskUpdate(taskId, owner="architect")`
-3. `Task(name="architect", team_name="{team_name}", subagent_type="pact-architect", mode="plan", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`
-
-**Plan mode workflow**: The architect spawns in read-only plan mode. After exploring the codebase and designing the architecture, the architect calls `ExitPlanMode` which sends a `plan_approval_request` to the lead. The lead reviews and responds via `plan_approval_response`:
-- **Approve**: Architect exits plan mode and produces architecture artifacts in `docs/architecture/`
-- **Reject with feedback**: Architect revises the plan and resubmits via `ExitPlanMode`
-
-> **Note**: Plan mode applies only in the `orchestrate` workflow. comPACT dispatches skip plan mode (light ceremony).
+3. `Task(name="architect", team_name="{team_name}", subagent_type="pact-architect", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`
 
 Completed-phase teammates remain as consultants. Do not shutdown during this workflow.
 
