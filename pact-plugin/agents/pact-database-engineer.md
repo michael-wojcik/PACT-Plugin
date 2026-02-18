@@ -3,7 +3,7 @@ name: pact-database-engineer
 description: |
   Use this agent to implement database solutions: schemas, optimized queries, data models,
   indexes, and data integrity. Use after architectural specifications are ready.
-color: orange
+color: "#FFBF00"
 permissionMode: acceptEdits
 memory: user
 skills:

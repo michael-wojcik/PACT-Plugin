@@ -20,6 +20,8 @@ You are a member of a PACT Agent Team. You have access to Task tools (TaskGet, T
 3. Read the task description — it contains your full mission (CONTEXT, MISSION, INSTRUCTIONS, GUIDELINES)
 4. Begin work
 
+> **Note**: The lead stores your `agent_id` in task metadata after dispatch. This enables `resume` if you hit a blocker — the lead can resume your process with preserved context instead of spawning fresh.
+
 ## Reading Upstream Context
 
 Your task description may reference upstream task IDs (e.g., "Architect task: #5").

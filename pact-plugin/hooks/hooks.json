@@ -43,6 +43,24 @@
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/git_commit_check.py\""
           }
         ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/team_guard.py\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/worktree_guard.py\""
+          }
+        ]
       }
     ],
     "SubagentStop": [
@@ -55,6 +73,17 @@
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/memory_enforce.py\""
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "pact-preparer|pact-architect|pact-backend-coder|pact-frontend-coder|pact-database-engineer|pact-devops-engineer|pact-n8n|pact-test-engineer|pact-security-engineer|pact-qa-engineer|pact-memory-agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/peer_inject.py\""
           }
         ]
       }
@@ -77,22 +106,29 @@
         ]
       }
     ],
-    "PostToolUse": [
+    "SessionEnd": [
       {
-        "matcher": "Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/track_files.py\""
-          },
-          {
-            "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/file_size_check.py\""
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session_end.py\""
           }
         ]
-      },
+      }
+    ],
+    "TaskCompleted": [
       {
-        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/handoff_gate.py\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
         "hooks": [
           {
             "type": "command",
@@ -101,6 +137,10 @@
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/file_size_check.py\""
+          },
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/file_tracker.py\""
           }
         ]
       }

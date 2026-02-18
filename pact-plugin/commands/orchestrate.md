@@ -38,10 +38,13 @@ b. Analyze work needed (QDCL for CODE)
 c. TaskCreate: agent task(s) as children of phase
 d. TaskUpdate: agent tasks owner = "{agent-name}"
 e. TaskUpdate: next phase addBlockedBy = [agent IDs]
-f. Spawn teammates: Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")
-g. Monitor via SendMessage (completion summaries) and TaskList until agents complete
-h. TaskUpdate: phase status = "completed" (agents self-manage their task status)
+f. Spawn teammates: Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="...")
+g. Store agent IDs: TaskUpdate(taskId, metadata={"agent_id": "{id_from_Task_return}"})
+h. Monitor via SendMessage (completion summaries) and TaskList until agents complete
+i. TaskUpdate: phase status = "completed" (agents self-manage their task status)
 ```
+
+> **Why store agent_id?** Enables `resume` for blocker recovery — see [Blocker Recovery](#blocker-recovery-resume-vs-fresh-spawn).
 
 **Skipped phases**: Mark directly `completed` (no `in_progress` — no work occurs):
 `TaskUpdate(phaseTaskId, status="completed", metadata={"skipped": true, "skip_reason": "{reason}"})`
@@ -504,6 +507,25 @@ Monitor for blocker/algedonic signals via:
 - After each agent dispatch, when agent reports completion, on any unexpected stoppage
 
 On signal detected: Follow Signal Task Handling in CLAUDE.md.
+
+### Blocker Recovery: Resume vs. Fresh Spawn
+
+When a blocker is resolved, prefer resuming the original agent over spawning fresh — this preserves the agent's accumulated context.
+
+**Decision matrix**:
+
+| Situation | Action | Rationale |
+|-----------|--------|-----------|
+| Blocker resolved, agent had significant partial work | `resume` | Preserve context |
+| Blocker resolved, agent's approach was wrong | Fresh spawn | Clean slate needed |
+| Agent hit `maxTurns` limit | Fresh spawn | Agent was likely looping |
+| Agent shut down for lifecycle cleanup | Fresh spawn | Context is stale |
+
+**Resume pattern**:
+1. Read agent ID from task metadata: `TaskGet(taskId).metadata.agent_id`
+2. Resume with blocker context: `Task(resume="{agent_id}", prompt="Blocker resolved: {details}. Continue your task.")`
+
+**Fresh spawn pattern** (when resume is inappropriate): Follow the standard dispatch pattern (TaskCreate + TaskUpdate + Task with name/team_name/subagent_type).
 
 ---
 

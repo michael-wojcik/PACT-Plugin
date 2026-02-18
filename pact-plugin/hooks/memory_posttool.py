@@ -4,9 +4,9 @@ Location: pact-plugin/hooks/memory_posttool.py
 Summary: PostToolUse hook that reminds agent to consider saving memory after edits.
 Used by: Claude Code settings.json PostToolUse hook (Edit, Write tools)
 
-PHILOSOPHY: Bias toward saving memories. Since pact-memory-agent runs in
-background, there's no workflow interruption cost. Better to save too much
-than lose context.
+PHILOSOPHY: Bias toward saving memories. The pact-memory-agent stays alive
+as a consultant after initial dispatch, so subsequent saves via SendMessage
+have minimal overhead. Better to save too much than lose context.
 
 Always fires after Edit/Write to provide contextual guidance. The agent
 decides based on whether they've completed a unit of work or are mid-task.

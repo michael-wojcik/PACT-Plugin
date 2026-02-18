@@ -22,7 +22,7 @@ These are orchestrator-side operations (agents report blockers via SendMessage t
 5. Blocked agent task is now unblocked
 ```
 
-**Note**: Agents report blockers via SendMessage to the lead ("BLOCKER: {description}"). The orchestrator creates blocker Tasks and uses `addBlockedBy` to block the agent's task. When the blocker is resolved (marked completed), the agent's task becomes unblocked. Exception: `pact-memory-agent` reports blockers via text in its response output (it is not a team member).
+**Note**: Agents report blockers via SendMessage to the lead ("BLOCKER: {description}"). The orchestrator creates blocker Tasks and uses `addBlockedBy` to block the agent's task. When the blocker is resolved (marked completed), the agent's task becomes unblocked.
 
 ---
 
