@@ -514,9 +514,9 @@ def main():
             else:
                 context_parts.append(staleness_msg)
 
-        # 6. Remind orchestrator to create session-unique PACT team (systemMessage for high visibility)
+        # 6. Remind orchestrator to create session-unique PACT team
         team_name = generate_team_name(input_data)
-        system_messages.insert(0, f'Your FIRST action must be: TeamCreate(team_name="{team_name}"). Do not read files, explore code, or respond to the user until the team is created. Use the name `{team_name}` wherever {{team_name}} appears in commands.')
+        context_parts.insert(0, f'Your FIRST action must be: TeamCreate(team_name="{team_name}"). Do not read files, explore code, or respond to the user until the team is created. Use the name `{team_name}` wherever {{team_name}} appears in commands.')
 
         # 7. Check for in_progress Tasks (resumption context via Task integration)
         tasks = get_task_list()
