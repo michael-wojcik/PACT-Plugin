@@ -106,19 +106,18 @@ Specialist agents (Coders, Architects) **cannot delegate** to other agents.
 
 #### When to Delegate (Save/Retrieve)
 
-**Delegate to `pact-memory-agent` (background) when:**
+**Delegate to `pact-memory-agent` when:**
 - **Saving**: You completed a task, made a key decision, or solved a tricky bug.
 - **Retrieving**: You are starting a new session, recovering from compaction, or facing a blocker.
 
-The agent runs async — it won't interrupt your workflow.
-
 #### How to Delegate
 
-Delegate to `pact-memory-agent` with a clear intent:
-- **Save**: `"Save memory: [context of what was done, decisions, lessons]"`
-- **Search**: `"Retrieve memories about: [topic/query]"`
+Delegate to `pact-memory-agent` using the standard Agent Teams dispatch pattern (TaskCreate + TaskUpdate + Task with name/team_name). The memory agent uses the same dispatch model as all other specialists.
 
-See **Agent Teams Dispatch** for the dispatch pattern. Note: `pact-memory-agent` is the one exception that still uses `run_in_background=true`.
+- **Save**: Include in task description: `"Save memory: [context of what was done, decisions, lessons]"`
+- **Search**: Include in task description: `"Retrieve memories about: [topic/query]"`
+
+**Reuse pattern**: Once spawned, the memory agent stays alive as a consultant. Subsequent memory requests go via `SendMessage` to the existing memory agent — no need to spawn a new one.
 
 #### Three-Layer Memory Architecture
 
@@ -305,10 +304,10 @@ Explicit user override ("you code this, don't delegate") should be honored; casu
 | Agent reports blocker | `TaskCreate(subject: "BLOCKER: ...")` then `TaskUpdate(agent_taskId, addBlockedBy: [blocker_taskId])` |
 | Agent reports algedonic signal | `TaskCreate(subject: "[HALT\|ALERT]: ...")` then amplify scope via `addBlockedBy` on phase/feature task |
 
-**Key principle**: Under Agent Teams, teammates self-manage their task status (claim via `TaskUpdate(status="in_progress")`, complete via `TaskUpdate(status="completed")`) and communicate via SendMessage (HANDOFFs, blockers, algedonic signals). The orchestrator creates tasks and monitors via TaskList and incoming SendMessage signals. Exception: `pact-memory-agent` communicates status via structured text in its response output (background task model).
+**Key principle**: Under Agent Teams, teammates self-manage their task status (claim via `TaskUpdate(status="in_progress")`, complete via `TaskUpdate(status="completed")`) and communicate via SendMessage (HANDOFFs, blockers, algedonic signals). The orchestrator creates tasks and monitors via TaskList and incoming SendMessage signals.
 
 ##### Signal Task Handling
-When an agent reports a blocker or algedonic signal via SendMessage (or via text for pact-memory-agent):
+When an agent reports a blocker or algedonic signal via SendMessage:
 1. Create a signal Task (blocker or algedonic type)
 2. Block the agent's task via `addBlockedBy`
 3. For algedonic signals, amplify scope:
@@ -385,15 +384,6 @@ When delegating a task, these specialist agents are available to execute PACT ph
 2. `TaskUpdate(taskId, owner="{name}")` — assign ownership
 3. `Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")` — spawn the teammate
 
-**Exception — `pact-memory-agent`**: This agent is NOT a team member. It still uses the background task model:
-```python
-Task(
-    subagent_type="pact-memory-agent",
-    run_in_background=true,  # ← memory agent only
-    prompt="Save memory: ..."
-)
-```
-
 **Why Agent Teams?**
 - Teammates self-manage task status (claim, progress, complete)
 - Communication via SendMessage (HANDOFFs, blockers, algedonic signals)
@@ -445,7 +435,7 @@ A list of things that include the following:
 
 #### Expected Agent HANDOFF Format
 
-Every agent delivers a structured HANDOFF. Under Agent Teams, HANDOFFs are stored in task metadata (via TaskUpdate). Agents send a brief summary via SendMessage — read the full HANDOFF with `TaskGet(taskId).metadata.handoff` when needed for decisions. For `pact-memory-agent`, HANDOFFs are embedded in the task response output. Expect this format:
+Every agent delivers a structured HANDOFF. Under Agent Teams, HANDOFFs are stored in task metadata (via TaskUpdate). Agents send a brief summary via SendMessage — read the full HANDOFF with `TaskGet(taskId).metadata.handoff` when needed for decisions. Expect this format:
 
 ```
 HANDOFF:

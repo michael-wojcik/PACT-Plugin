@@ -97,8 +97,6 @@ Under Agent Teams, teammates have access to Task tools (TaskGet, TaskUpdate, Tas
    ```
 3. Provide a partial handoff with whatever work was completed
 
-**Exception**: `pact-memory-agent` does not use SendMessage (it is not a team member). It reports algedonic signals as structured text in its response output.
-
 The lead receives the SendMessage signal and handles algedonic Task creation and scope amplification.
 
 **Orchestrator creates and manages the algedonic Task:**

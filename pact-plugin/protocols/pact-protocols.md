@@ -1116,8 +1116,6 @@ If work spans sessions, update CLAUDE.md with:
 
 Detection is event-driven: check at signal monitoring points (after dispatch, on TeammateIdle events, on SendMessage receipt). If a teammate goes idle without sending a completion message or blocker, treat as stalled immediately.
 
-**Exception — pact-memory-agent**: Uses the background task model (`run_in_background=true`). Stall indicators for this agent are: background task returned but no output, or task running with no progress at monitoring checkpoints.
-
 ### Recovery Protocol
 
 1. Check the teammate's TaskList status and any partial task metadata or SendMessage output for context on what happened
