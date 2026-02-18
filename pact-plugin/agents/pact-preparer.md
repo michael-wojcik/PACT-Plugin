@@ -3,9 +3,12 @@ name: pact-preparer
 description: |
   Use this agent to research and gather documentation: API docs, best practices,
   code examples, and technical information for development. First phase of PACT.
-color: blue
+color: "#008080"
 permissionMode: acceptEdits
 memory: user
+maxTurns: 30
+disallowedTools:
+  - Task
 skills:
   - pact-agent-teams
 ---

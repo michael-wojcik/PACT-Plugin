@@ -3,9 +3,12 @@ name: pact-frontend-coder
 description: |
   Use this agent to implement frontend code: responsive, accessible user interfaces with
   proper state management. Use after architectural specifications are ready.
-color: cyan
+color: "#32CD32"
 permissionMode: acceptEdits
 memory: user
+maxTurns: 50
+disallowedTools:
+  - Task
 skills:
   - pact-agent-teams
 ---

@@ -3,9 +3,12 @@ name: pact-n8n
 description: |
   Use this agent to build, validate, or troubleshoot n8n workflows: webhooks, HTTP integrations,
   database workflows, AI agent workflows, and scheduled tasks. Requires n8n-mcp MCP server.
-color: magenta
+color: "#FF7F50"
 permissionMode: acceptEdits
 memory: user
+maxTurns: 50
+disallowedTools:
+  - Task
 skills:
   - pact-agent-teams
 ---

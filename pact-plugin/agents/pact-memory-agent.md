@@ -26,9 +26,10 @@ description: |
   assistant: "Let me use the pact-memory-agent to search for recent context and synthesize what you were doing"
   <commentary>Context recovery at session start benefits from memory agent's search and synthesis capabilities.</commentary>
   </example>
-color: purple
+color: "#708090"
 permissionMode: acceptEdits
 memory: user
+maxTurns: 20
 skills: []
 ---
 

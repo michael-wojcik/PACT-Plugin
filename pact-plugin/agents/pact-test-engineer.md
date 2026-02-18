@@ -3,9 +3,12 @@ name: pact-test-engineer
 description: |
   Use this agent to create and run tests: unit tests, integration tests, E2E tests,
   performance tests, and security tests. Use after code implementation is complete.
-color: red
+color: "#DC143C"
 permissionMode: acceptEdits
 memory: user
+maxTurns: 20
+disallowedTools:
+  - Task
 skills:
   - pact-agent-teams
 ---

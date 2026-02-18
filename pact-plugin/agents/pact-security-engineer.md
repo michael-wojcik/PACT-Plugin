@@ -3,9 +3,12 @@ name: pact-security-engineer
 description: |
   Use this agent for adversarial security code review: finding vulnerabilities, auth flaws,
   injection risks, and data exposure. Does not fix issues — reports findings for coders to address.
-color: brightRed
+color: "#8B0000"
 permissionMode: acceptEdits
 memory: user
+maxTurns: 20
+disallowedTools:
+  - Task
 skills:
   - pact-agent-teams
 ---

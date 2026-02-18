@@ -3,9 +3,12 @@ name: pact-devops-engineer
 description: |
   Use this agent to implement infrastructure and build systems: CI/CD pipelines, Dockerfiles,
   shell scripts, Makefiles, and infrastructure as code. Use after architectural specifications are ready.
-color: gray
+color: "#FF6600"
 permissionMode: acceptEdits
 memory: user
+maxTurns: 50
+disallowedTools:
+  - Task
 skills:
   - pact-agent-teams
 ---
