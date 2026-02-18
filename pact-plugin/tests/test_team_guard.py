@@ -27,13 +27,13 @@ class TestTeamGuard:
     def test_allows_when_team_exists(self, tmp_path):
         from team_guard import check_team_exists
 
-        team_dir = tmp_path / "teams" / "PACT-abc12345"
+        team_dir = tmp_path / "teams" / "pact-abc12345"
         team_dir.mkdir(parents=True)
         config = team_dir / "config.json"
         config.write_text('{"members": []}')
 
         result = check_team_exists(
-            tool_input={"team_name": "PACT-abc12345"},
+            tool_input={"team_name": "pact-abc12345"},
             teams_dir=str(tmp_path / "teams")
         )
 
@@ -43,7 +43,7 @@ class TestTeamGuard:
         from team_guard import check_team_exists
 
         result = check_team_exists(
-            tool_input={"team_name": "PACT-abc12345"},
+            tool_input={"team_name": "pact-abc12345"},
             teams_dir=str(tmp_path / "teams")
         )
 
@@ -69,6 +69,23 @@ class TestTeamGuard:
         )
 
         assert result is None
+
+    def test_normalizes_uppercase_team_name(self, tmp_path):
+        """Uppercase team_name should be normalized to lowercase for directory lookup."""
+        from team_guard import check_team_exists
+
+        # Create team directory with lowercase name (as TeamCreate does)
+        team_dir = tmp_path / "teams" / "pact-abc12345"
+        team_dir.mkdir(parents=True)
+        (team_dir / "config.json").write_text('{"members": []}')
+
+        # Pass uppercase team_name — should still find the lowercase directory
+        result = check_team_exists(
+            tool_input={"team_name": "PACT-abc12345"},
+            teams_dir=str(tmp_path / "teams")
+        )
+
+        assert result is None  # None means allow (found the team)
 
 
 class TestMainEntryPoint:
