@@ -43,6 +43,15 @@
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/git_commit_check.py\""
           }
         ]
+      },
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/team_guard.py\""
+          }
+        ]
       }
     ],
     "SubagentStop": [
@@ -73,6 +82,16 @@
           {
             "type": "command",
             "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/memory_prompt.py\""
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/session_end.py\""
           }
         ]
       }
