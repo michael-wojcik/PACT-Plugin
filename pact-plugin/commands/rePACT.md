@@ -1,12 +1,12 @@
 ---
 description: Recursive nested PACT cycle for complex sub-tasks
-argument-hint: [backend|frontend|database|prepare|test|architect] <sub-task description>
+argument-hint: [backend|frontend|database|prepare|test|architect|devops|security|qa] <sub-task description>
 ---
 Run a recursive PACT cycle for this sub-task: $ARGUMENTS
 
 This command initiates a **nested P→A→C→T cycle** for a sub-task that is too complex for simple delegation but should remain part of the current feature work.
 
-**Team behavior**: rePACT spawns sub-scope teammates into the existing session team (`PACT-{session_hash}`). No new team is created. Use scope-prefixed names (e.g., `backend-coder-auth-scope`) to distinguish sub-scope teammates from parent-scope teammates.
+**Team behavior**: rePACT spawns sub-scope teammates into the existing session team (`pact-{session_hash}`). No new team is created. Use scope-prefixed names (e.g., `backend-coder-auth-scope`) to distinguish sub-scope teammates from parent-scope teammates.
 
 ---
 
@@ -113,6 +113,9 @@ This runs a mini-orchestration:
 | `prepare` | pact-preparer | Research-only nested cycles |
 | `test` | pact-test-engineer | Test infrastructure sub-tasks |
 | `architect` | pact-architect | Design-only nested cycles |
+| `devops` | pact-devops-engineer | Infrastructure sub-components |
+| `security` | pact-security-engineer | Security review nested cycles |
+| `qa` | pact-qa-engineer | Runtime verification sub-tasks |
 
 **If no specialist specified**: Assess the sub-task and determine which specialists are needed (multi-domain mode).
 
@@ -214,7 +217,7 @@ For each specialist needed:
 
 For multi-domain: spawn multiple specialists in parallel.
 Apply S2 coordination if parallel work.
-Output: Code + HANDOFF via SendMessage to lead.
+Output: Code + HANDOFF in task metadata (summary via SendMessage to lead).
 
 ### Phase 4: Mini-Test
 
@@ -266,7 +269,7 @@ See [pact-scope-contract.md](../protocols/pact-scope-contract.md) for the contra
 
 ## Relationship to Specialist Autonomy
 
-Specialists can invoke nested cycles autonomously (see Autonomy Charter).
+Specialists can invoke nested cycles autonomously (see [Autonomy Charter](../protocols/pact-s1-autonomy.md#autonomy-charter)).
 `/PACT:rePACT` is for **orchestrator-initiated** nested cycles.
 
 | Initiator | Mechanism |

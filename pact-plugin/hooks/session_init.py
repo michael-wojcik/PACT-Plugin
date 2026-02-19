@@ -72,14 +72,14 @@ def generate_team_name(input_data: dict[str, Any]) -> str:
 
     Uses the first 8 characters of the session_id from the SessionStart hook
     input (or CLAUDE_SESSION_ID env var) to create a unique team name like
-    "PACT-0001639f". Falls back to a random 8-character hex suffix if neither
+    "pact-0001639f". Falls back to a random 8-character hex suffix if neither
     source provides a session_id.
 
     Args:
         input_data: Parsed JSON from stdin (SessionStart hook input)
 
     Returns:
-        Team name string like "PACT-0001639f"
+        Team name string like "pact-0001639f"
     """
     raw_id = input_data.get("session_id")
     session_id = str(raw_id) if raw_id else os.environ.get("CLAUDE_SESSION_ID", "")
@@ -87,7 +87,7 @@ def generate_team_name(input_data: dict[str, Any]) -> str:
         suffix = session_id[:8]
     else:
         suffix = secrets.token_hex(4)
-    return f"PACT-{suffix}"
+    return f"pact-{suffix}"
 
 
 def setup_plugin_symlinks() -> str | None:
@@ -413,6 +413,57 @@ def update_session_info(session_id: str, team_name: str) -> str | None:
         return f"Session info failed: {str(e)[:30]}"
 
 
+def restore_last_session(
+    project_slug: str,
+    sessions_dir: str | None = None,
+) -> str | None:
+    """
+    Restore the last session snapshot for cross-session continuity.
+
+    Checks if ~/.claude/pact-sessions/{project_slug}/last-session.md exists.
+    If found, reads the content, rotates it to last-session.prev.md, and returns
+    the content with a header for injection as additionalContext.
+
+    Args:
+        project_slug: Project identifier for the session directory
+        sessions_dir: Override for sessions base directory (for testing)
+
+    Returns:
+        Snapshot content with header if file exists, None otherwise
+    """
+    if not project_slug:
+        return None
+
+    if sessions_dir is None:
+        sessions_dir = str(Path.home() / ".claude" / "pact-sessions")
+
+    snapshot_file = Path(sessions_dir) / project_slug / "last-session.md"
+    if not snapshot_file.exists():
+        return None
+
+    try:
+        content = snapshot_file.read_text(encoding="utf-8")
+    except (IOError, UnicodeDecodeError):
+        return None
+
+    if not content.strip():
+        return None
+
+    # Rotate: move last-session.md to last-session.prev.md
+    prev_file = snapshot_file.parent / "last-session.prev.md"
+    try:
+        # Overwrite any existing prev file
+        prev_file.write_text(content, encoding="utf-8")
+        snapshot_file.unlink()
+    except (IOError, OSError):
+        pass  # Best-effort rotation; don't fail the restore
+
+    return (
+        "Previous session summary (read-only reference -- not live tasks):\n"
+        + content
+    )
+
+
 def check_resumption_context(tasks: list[dict[str, Any]]) -> str | None:
     """
     Check if there are in_progress Tasks indicating work to resume.
@@ -493,6 +544,7 @@ def main():
     5. Checks for stale pinned context entries in project CLAUDE.md
     6. Generates session-unique PACT team name and reminds orchestrator to create it
     7. Checks for in_progress Tasks (resumption context via Task integration)
+    8. Restores last session snapshot for cross-session continuity
 
     Memory initialization (dependencies, migrations, embedding catch-up) is
     now lazy-loaded on first memory operation to reduce startup cost for
@@ -549,7 +601,7 @@ def main():
 
         # 6. Remind orchestrator to create session-unique PACT team
         team_name = generate_team_name(input_data)
-        context_parts.append(f"⚠️ Once per session, run TeamCreate(team_name=\"{team_name}\") before starting any work or spawning any agents. Use the name `{team_name}` wherever `{{team_name}}` appears in commands.")
+        context_parts.insert(0, f'Your FIRST action must be: TeamCreate(team_name="{team_name}"). Do not read files, explore code, or respond to the user until the team is created. Use the name `{team_name}` wherever {{team_name}} appears in commands.')
 
         # 6b. Write session resume info to project CLAUDE.md
         raw_id = input_data.get("session_id")
@@ -572,6 +624,12 @@ def main():
                     system_messages.append(resumption_msg)
                 else:
                     context_parts.append(resumption_msg)
+
+        # 8. Restore last session snapshot for cross-session continuity
+        project_slug = Path(project_dir).name if project_dir else ""
+        session_snapshot = restore_last_session(project_slug=project_slug)
+        if session_snapshot:
+            context_parts.append(session_snapshot)
 
         # Build output
         output = {}

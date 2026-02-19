@@ -38,10 +38,13 @@ b. Analyze work needed (QDCL for CODE)
 c. TaskCreate: agent task(s) as children of phase
 d. TaskUpdate: agent tasks owner = "{agent-name}"
 e. TaskUpdate: next phase addBlockedBy = [agent IDs]
-f. Spawn teammates: Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")
-g. Monitor via SendMessage (HANDOFFs) and TaskList until agents complete
-h. TaskUpdate: phase status = "completed" (agents self-manage their task status)
+f. Spawn teammates: Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="...")
+g. Store agent IDs: TaskUpdate(taskId, metadata={"agent_id": "{id_from_Task_return}"})
+h. Monitor via SendMessage (completion summaries) and TaskList until agents complete
+i. TaskUpdate: phase status = "completed" (agents self-manage their task status)
 ```
+
+> **Why store agent_id?** Enables `resume` for blocker recovery — see [Blocker Recovery](#blocker-recovery-resume-vs-fresh-spawn).
 
 **Skipped phases**: Mark directly `completed` (no `in_progress` — no work occurs):
 `TaskUpdate(phaseTaskId, status="completed", metadata={"skipped": true, "skip_reason": "{reason}"})`
@@ -180,7 +183,7 @@ Sequential execution is the exception requiring explicit justification. When ass
 
 ### Phase Transitions
 
-Lead monitors for phase completion via `SendMessage` from teammates (HANDOFF messages) and `TaskList` status. When all phase tasks are completed, create next phase's tasks and spawn next phase's teammates. Previous-phase teammates remain as consultants.
+Lead monitors for phase completion via `SendMessage` from teammates (completion summaries) and `TaskList` status. When all phase tasks are completed, create next phase's tasks and spawn next phase's teammates. Previous-phase teammates remain as consultants.
 
 ---
 
@@ -321,6 +324,7 @@ When detection fires (score >= threshold), follow the evaluation response protoc
 **Dispatch `pact-architect`**:
 1. `TaskCreate(subject="architect: design {feature}", description="CONTEXT: ...\nMISSION: ...\nINSTRUCTIONS: ...\nGUIDELINES: ...")`
    - Include task description, where to find PREPARE outputs (e.g., "Read `docs/preparation/{feature}.md`"), plan sections (if any), and plan reference.
+   - Include upstream task reference: "Preparer task: #{taskId} — read via TaskGet for research decisions and context."
    - Do not read phase output files yourself or paste their content into the task description.
    - If PREPARE was skipped: pass the plan's Preparation Phase section instead.
 2. `TaskUpdate(taskId, owner="architect")`
@@ -358,6 +362,7 @@ Completed-phase teammates remain as consultants. Do not shutdown during this wor
 - `pact-backend-coder` — server-side logic, APIs
 - `pact-frontend-coder` — UI, client-side
 - `pact-database-engineer` — schema, queries, migrations
+- `pact-devops-engineer` — CI/CD, Docker, infrastructure, build systems
 
 #### Invoke Concurrently by Default
 
@@ -407,6 +412,7 @@ Before concurrent dispatch, check internally: shared files? shared interfaces? c
 For each coder needed:
 1. `TaskCreate(subject="{coder-type}: implement {scope}", description="CONTEXT: ...\nMISSION: ...\nINSTRUCTIONS: ...\nGUIDELINES: ...")`
    - Include task description, where to find ARCHITECT outputs (e.g., "Read `docs/architecture/{feature}.md`"), plan sections (if any), plan reference.
+   - Include upstream task references: "Architect task: #{taskId} — read via TaskGet for design decisions." If multiple coders are dispatched concurrently, include peer names: "Your peers on this phase: {other-coder-names}."
    - Do not read phase output files yourself or paste their content into the task description.
    - If ARCHITECT was skipped: pass the plan's Architecture Phase section instead.
    - If PREPARE/ARCHITECT were skipped, include: "PREPARE and/or ARCHITECT were skipped based on existing context. Minor decisions (naming, local structure) are yours to make. For moderate decisions (interface shape, error patterns), decide and implement but flag the decision with your rationale in the handoff so it can be validated. Major decisions affecting other components are blockers—don't implement, escalate."
@@ -472,7 +478,7 @@ Execute the [CONSOLIDATE Phase protocol](../protocols/pact-scope-phases.md#conso
 
 **Dispatch `pact-test-engineer`**:
 1. `TaskCreate(subject="test-engineer: test {feature}", description="CONTEXT: ...\nMISSION: ...\nINSTRUCTIONS: ...\nGUIDELINES: ...")`
-   - Include task description, CODE phase handoff summaries (from SendMessage, not files), plan sections (if any), plan reference.
+   - Include task description, coder task references (e.g., "Coder tasks: #{id1}, #{id2} — read via TaskGet for implementation decisions and flagged uncertainties"), plan sections (if any), plan reference.
    - Include: "You own ALL substantive testing: unit tests, integration, E2E, edge cases."
 2. `TaskUpdate(taskId, owner="test-engineer")`
 3. `Task(name="test-engineer", team_name="{team_name}", subagent_type="pact-test-engineer", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`
@@ -501,6 +507,25 @@ Monitor for blocker/algedonic signals via:
 - After each agent dispatch, when agent reports completion, on any unexpected stoppage
 
 On signal detected: Follow Signal Task Handling in CLAUDE.md.
+
+### Blocker Recovery: Resume vs. Fresh Spawn
+
+When a blocker is resolved, prefer resuming the original agent over spawning fresh — this preserves the agent's accumulated context.
+
+**Decision matrix**:
+
+| Situation | Action | Rationale |
+|-----------|--------|-----------|
+| Blocker resolved, agent had significant partial work | `resume` | Preserve context |
+| Blocker resolved, agent's approach was wrong | Fresh spawn | Clean slate needed |
+| Agent hit `maxTurns` limit | Fresh spawn | Agent was likely looping |
+| Agent shut down for lifecycle cleanup | Fresh spawn | Context is stale |
+
+**Resume pattern**:
+1. Read agent ID from task metadata: `TaskGet(taskId).metadata.agent_id`
+2. Resume with blocker context: `Task(resume="{agent_id}", prompt="Blocker resolved: {details}. Continue your task.")`
+
+**Fresh spawn pattern** (when resume is inappropriate): Follow the standard dispatch pattern (TaskCreate + TaskUpdate + Task with name/team_name/subagent_type).
 
 ---
 

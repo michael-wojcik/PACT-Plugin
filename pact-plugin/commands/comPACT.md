@@ -1,6 +1,6 @@
 ---
 description: Delegate within a single domain—concurrent agents for independent sub-tasks
-argument-hint: [backend|frontend|database|prepare|test|architect] <task>
+argument-hint: [backend|frontend|database|prepare|test|architect|devops|security|qa] <task>
 ---
 Delegate this focused task within a single PACT domain: $ARGUMENTS
 
@@ -49,6 +49,9 @@ Create a simpler Task hierarchy than full orchestrate:
 | `prepare` | pact-preparer | Research, requirements gathering |
 | `test` | pact-test-engineer | Standalone test tasks |
 | `architect` | pact-architect | Design guidance, pattern selection |
+| `devops` | pact-devops-engineer | CI/CD, Docker, scripts, infrastructure |
+| `security` | pact-security-engineer | Security audit of existing code |
+| `qa` | pact-qa-engineer | Runtime verification of app behavior |
 
 ### If specialist not specified or unrecognized
 
@@ -62,7 +65,10 @@ If the first word isn't a recognized shorthand, treat the entire argument as the
   - Test: Jest, test, spec, coverage
   - Prepare: research, investigate, requirements, explore, compare
   - Architect: pattern, singleton, factory, structure, architecture
-- Task mentions specific file types (.tsx, .jsx, .sql, .spec.ts, etc.)
+  - DevOps: CI/CD, Docker, Dockerfile, pipeline, deploy, infrastructure, Terraform, Makefile, GitHub Actions, workflow, container, Pulumi, CloudFormation
+  - Security: vulnerability, CVE, injection, XSS, auth bypass, security audit, penetration, OWASP, secrets, credential
+  - QA: runtime, exploratory, browser, Playwright, visual, smoke test, manual test, visual regression, user flow
+- Task mentions specific file types (.tsx, .jsx, .sql, .spec.ts, .yml, .yaml, Dockerfile, .sh, .tf, .toml, etc.)
 - Proceed immediately: "Delegating to [specialist]..."
 
 **Ask when ambiguous**:
@@ -152,7 +158,7 @@ Before invoking multiple specialists concurrently, perform this coordination che
 When the task contains multiple independent items, invoke multiple specialists together with boundary context:
 
 For each specialist needed:
-1. `TaskCreate(subject="{specialist}: {sub-task}", description="comPACT mode (concurrent): You are one of [N] specialists working concurrently.\nYou are working in a git worktree at [worktree_path].\n\nYOUR SCOPE: [specific sub-task]\nOTHER AGENTS' SCOPE: [what others handle]\n\nWork directly from this task description.\nCheck docs/plans/, docs/preparation/, docs/architecture/ briefly if they exist.\nDo not create new documentation artifacts in docs/.\nStay within your assigned scope.\n\nTesting: New unit tests for logic changes. Fix broken existing tests. Run test suite before handoff.\n\nIf you hit a blocker, STOP and SendMessage it to the lead.\n\nTask: [this agent's specific sub-task]")`
+1. `TaskCreate(subject="{specialist}: {sub-task}", description="comPACT mode (concurrent): You are one of [N] specialists working concurrently.\nYou are working in a git worktree at [worktree_path].\n\nYOUR SCOPE: [specific sub-task]\nOTHER AGENTS' SCOPE: [what others handle]\n\nWork directly from this task description.\nIf upstream task IDs are provided, read via TaskGet for prior decisions.\nCheck docs/plans/, docs/preparation/, docs/architecture/ briefly if they exist.\nDo not create new documentation artifacts in docs/.\nStay within your assigned scope.\n\nTesting: New unit tests for logic changes. Fix broken existing tests. Run test suite before handoff.\n\nIf you hit a blocker, STOP and SendMessage it to the lead.\n\nTask: [this agent's specific sub-task]")`
 2. `TaskUpdate(taskId, owner="{specialist-name}")`
 3. `Task(name="{specialist-name}", team_name="{team_name}", subagent_type="pact-{specialist-type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`
 
@@ -169,7 +175,7 @@ Use a single specialist agent only when:
 - Conventions haven't been established yet (run one first to set patterns)
 
 **Dispatch the specialist**:
-1. `TaskCreate(subject="{specialist}: {task}", description="comPACT mode: Work directly from this task description.\nYou are working in a git worktree at [worktree_path].\nCheck docs/plans/, docs/preparation/, docs/architecture/ briefly if they exist.\nDo not create new documentation artifacts in docs/.\nFocus on the task at hand.\n\nTesting: New unit tests for logic changes (optional for trivial changes). Fix broken existing tests. Run test suite before handoff.\n\n> Smoke vs comprehensive tests: These are verification tests. Comprehensive coverage is TEST phase work.\n\nIf you hit a blocker, STOP and SendMessage it to the lead.\n\nTask: [user's task description]")`
+1. `TaskCreate(subject="{specialist}: {task}", description="comPACT mode: Work directly from this task description.\nYou are working in a git worktree at [worktree_path].\nIf upstream task IDs are provided, read via TaskGet for prior decisions.\nCheck docs/plans/, docs/preparation/, docs/architecture/ briefly if they exist.\nDo not create new documentation artifacts in docs/.\nFocus on the task at hand.\n\nTesting: New unit tests for logic changes (optional for trivial changes). Fix broken existing tests. Run test suite before handoff.\n\n> Smoke vs comprehensive tests: These are verification tests. Comprehensive coverage is TEST phase work.\n\nIf you hit a blocker, STOP and SendMessage it to the lead.\n\nTask: [user's task description]")`
 2. `TaskUpdate(taskId, owner="{specialist-name}")`
 3. `Task(name="{specialist-name}", team_name="{team_name}", subagent_type="pact-{specialist-type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")`
 

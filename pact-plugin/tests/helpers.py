@@ -171,7 +171,7 @@ def make_send_message_call(
 
 
 def make_team_create_call(
-    team_name: str = "PACT-test1234",
+    team_name: str = "pact-test1234",
     description: str = "PACT session team",
     tool_use_id: str = "teamcreate-123",
 ) -> dict[str, Any]:
@@ -179,7 +179,7 @@ def make_team_create_call(
     Create a TeamCreate tool call block for Agent Teams team creation.
 
     Args:
-        team_name: Name of the team (e.g., "PACT-a1b2c3d4")
+        team_name: Name of the team (e.g., "pact-a1b2c3d4")
         description: Description of the team
         tool_use_id: Unique ID for the tool call
 
@@ -211,7 +211,7 @@ def make_team_task_call(
 
     Args:
         name: Teammate name (e.g., "preparer", "backend-coder")
-        team_name: Team to join (e.g., "PACT-a1b2c3d4")
+        team_name: Team to join (e.g., "pact-a1b2c3d4")
         subagent_type: Agent type (e.g., "pact-backend-coder")
         prompt: Thin prompt directing agent to check TaskList
         tool_use_id: Unique ID for the tool call
@@ -595,7 +595,7 @@ def create_agent_teams_orchestrate_transcript(
     phase: str = "code",
     include_task: str = "implement auth",
     include_termination: bool = False,
-    team_name: str = "PACT-test1234",
+    team_name: str = "pact-test1234",
 ) -> str:
     """
     Generate a realistic orchestrate workflow transcript using Agent Teams dispatch.
@@ -607,7 +607,7 @@ def create_agent_teams_orchestrate_transcript(
         phase: Current phase (variety-assess, prepare, architect, code, test)
         include_task: Task description
         include_termination: Whether to add termination signal
-        team_name: Session-unique team name for Agent Teams dispatch (e.g., "PACT-a1b2c3d4")
+        team_name: Session-unique team name for Agent Teams dispatch (e.g., "pact-a1b2c3d4")
 
     Returns:
         JSONL string representing the transcript
@@ -680,14 +680,14 @@ def create_agent_teams_orchestrate_transcript(
             timestamp="2025-01-22T10:02:00Z",
         ))
 
-    # SendMessage handoff from coder
+    # Completion summary from coder (metadata-first HANDOFF)
     if phase in ["code", "test"]:
         lines.append(make_assistant_message(
             content=[
-                {"type": "text", "text": "Received HANDOFF from backend-coder via SendMessage."},
+                {"type": "text", "text": "Received completion summary from backend-coder. Full HANDOFF stored in task metadata."},
                 make_send_message_call(
                     recipient="lead",
-                    content="HANDOFF:\n1. Produced: src/auth.py\n2. Key decisions: Used JWT\n3. Areas of uncertainty: None\n4. Integration points: None\n5. Open questions: None",
+                    content="Task complete. Implemented auth endpoint using JWT tokens. No HIGH uncertainties.",
                     summary="Task complete: auth endpoint",
                     tool_use_id="sendmsg-handoff",
                 ),

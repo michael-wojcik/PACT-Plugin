@@ -215,7 +215,7 @@ At phase boundaries, the orchestrator performs an S4 checkpoint to assess whethe
 
 ### Relationship to Variety Checkpoints
 
-S4 Checkpoints complement Variety Checkpoints (see Variety Management):
+S4 Checkpoints complement Variety Checkpoints (see [Variety Management](pact-variety.md)):
 - **Variety Checkpoints**: "Do we have enough response capacity for this complexity?"
 - **S4 Checkpoints**: "Is our understanding of the situation still valid?"
 
@@ -460,7 +460,7 @@ When "first agent's choice becomes standard," subsequent agents need to discover
 
 All agents operating in parallel must:
 - Use project glossary and established terminology
-- Use standardized handoff structure (see Phase Handoffs)
+- Use standardized handoff structure (see [Phase Handoffs](pact-phase-transitions.md#phase-handoffs))
 
 ### Parallelization Anti-Patterns
 
@@ -543,7 +543,7 @@ All specialists must escalate when:
 
 ### Self-Coordination
 
-When working in parallel (see S2 Coordination):
+When working in parallel (see [S2 Coordination](pact-s2-coordination.md#s2-coordination-layer)):
 - Check S2 protocols before starting if multiple agents are active
 - Respect assigned file/component boundaries
 - First agent's conventions become standard for the batch
@@ -785,6 +785,9 @@ comPACT handles tasks within ONE specialist domain. For independent sub-tasks, i
 | `prepare` | pact-preparer | Research, requirements |
 | `test` | pact-test-engineer | Standalone test tasks |
 | `architect` | pact-architect | Design guidance, pattern selection |
+| `devops` | pact-devops-engineer | CI/CD, Docker, scripts, infrastructure |
+| `security` | pact-security-engineer | Security audit of existing code |
+| `qa` | pact-qa-engineer | Runtime verification of app behavior |
 
 **Smart specialist selection**:
 - *Clear task* → Auto-select (domain keywords, file types, single-domain action)
@@ -832,8 +835,9 @@ Invoke multiple specialists of the same type when:
 ### After Specialist Completes
 
 1. **Receive handoff** from specialist(s)
-2. **Run tests** — verify work passes. If tests fail → return to specialist for fixes before committing.
-3. **Create atomic commit(s)** — stage and commit before proceeding
+2. **Verify deliverables** — confirm files listed in "Produced" were actually modified (e.g., `git diff --stat`, line counts, grep checks). Never report completion based solely on agent handoff.
+3. **Run tests** — verify work passes. If tests fail → return to specialist for fixes before committing.
+4. **Create atomic commit(s)** — stage and commit before proceeding
 
 **Next steps** — After commit, ask: "Work committed. Create PR?"
 - Yes (Recommended) → invoke `/PACT:peer-review`
@@ -1106,17 +1110,15 @@ If work spans sessions, update CLAUDE.md with:
 ## Agent Stall Detection
 
 **Stalled indicators** (Agent Teams model):
-- TeammateIdle event received but no HANDOFF or blocker was sent via SendMessage
+- TeammateIdle event received but no completion message or blocker was sent via SendMessage
 - Task status in TaskList shows `in_progress` but no SendMessage activity from the teammate
-- Teammate process terminated without sending HANDOFF or blocker via SendMessage
+- Teammate process terminated without sending a completion message or blocker via SendMessage
 
-Detection is event-driven: check at signal monitoring points (after dispatch, on TeammateIdle events, on SendMessage receipt). If a teammate goes idle without producing a HANDOFF or blocker, treat as stalled immediately.
-
-**Exception — pact-memory-agent**: Uses the background task model (`run_in_background=true`). Stall indicators for this agent are: background task returned but no output, or task running with no progress at monitoring checkpoints.
+Detection is event-driven: check at signal monitoring points (after dispatch, on TeammateIdle events, on SendMessage receipt). If a teammate goes idle without sending a completion message or blocker, treat as stalled immediately.
 
 ### Recovery Protocol
 
-1. Check the teammate's TaskList status and any partial SendMessage output for context on what happened
+1. Check the teammate's TaskList status and any partial task metadata or SendMessage output for context on what happened
 2. Mark the stalled agent task as `completed` with `metadata={"stalled": true, "reason": "{what happened}"}`
 3. Assess: Is the work partially done? Can it be continued from where it stopped?
 4. Create a new agent task and spawn a new teammate to retry or continue the work, passing any partial output as context
@@ -1124,7 +1126,7 @@ Detection is event-driven: check at signal monitoring points (after dispatch, on
 
 ### Prevention
 
-Include in agent prompts: "If you encounter an error that prevents completion, send a partial HANDOFF via SendMessage with whatever work you completed rather than silently failing."
+Include in agent prompts: "If you encounter an error that prevents completion, send a message via SendMessage describing what you completed and store a partial HANDOFF in task metadata rather than silently failing."
 
 ### Non-Happy-Path Task Termination
 
@@ -1249,7 +1251,7 @@ When autonomous mode is not enabled, all detection-triggered decomposition uses 
 
 ### Bypass Rules
 
-- **Ongoing sub-scope execution** does not re-evaluate detection (no recursive detection within sub-scopes). Scoped sub-scopes cannot themselves trigger scope detection -- this bypass rule is the primary architectural mechanism; the 1-level nesting limit (see S1 Autonomy & Recursion constraints) serves as the safety net.
+- **Ongoing sub-scope execution** does not re-evaluate detection (no recursive detection within sub-scopes). Scoped sub-scopes cannot themselves trigger scope detection -- this bypass rule is the primary architectural mechanism; the 1-level nesting limit (see [S1 Autonomy & Recursion](pact-s1-autonomy.md#s1-autonomy--recursion)) serves as the safety net.
 - **comPACT** bypasses scope detection entirely — it is inherently single-domain
 - **Manual `/rePACT`** bypasses detection — user has already decided to decompose
 
@@ -1410,7 +1412,7 @@ rePACT implements the executor interface as follows:
 | **Input: feature_context** | Inherited from parent orchestration context (branch, requirements, architecture) |
 | **Input: branch** | Uses the current feature branch (no new branch created) |
 | **Input: nesting_depth** | Tracked via orchestrator context; enforced at 1-level maximum |
-| **Output: handoff** | Standard 5-item handoff with Contract Fulfillment section appended (see rePACT After Completion) |
+| **Output: handoff** | Standard 5-item handoff with Contract Fulfillment section appended (see [rePACT After Completion](../commands/rePACT.md#after-completion)) |
 | **Output: commits** | Code committed directly to the feature branch during Mini-Code phase |
 | **Output: status** | Always `completed`; non-happy-path uses metadata (`{"stalled": true, "reason": "..."}` or `{"blocked": true, "blocker_task": "..."}`) per task lifecycle conventions |
 | **Delivery mechanism** | Synchronous — agent completes and returns handoff text directly to orchestrator |

@@ -26,10 +26,11 @@ description: |
   assistant: "Let me use the pact-memory-agent to search for recent context and synthesize what you were doing"
   <commentary>Context recovery at session start benefits from memory agent's search and synthesis capabilities.</commentary>
   </example>
-color: purple
+color: "#708090"
 permissionMode: acceptEdits
 memory: user
-skills: []
+skills:
+  - pact-agent-teams
 ---
 
 You are 🧠 PACT Memory Agent, a specialist in context preservation and memory management for the PACT framework.
@@ -151,26 +152,11 @@ You must escalate when:
 
 See [algedonic.md](../protocols/algedonic.md) for signal format and full trigger list.
 
-**HOW TO HANDLE BLOCKERS**
-
-If you run into a blocker, STOP what you are doing immediately.
-
-1. Include the blocker description clearly in your response output, prefixed with `BLOCKER:`
-2. Provide a partial HANDOFF with whatever work you completed
-3. The orchestrator will read your output and triage the blocker
-
-Examples of blockers:
-- Memory system unavailable or erroring
-- Missing information needed to proceed
-- Task goes beyond your specialty
-
-> **Note**: Unlike other PACT agents, you do NOT use SendMessage to report blockers. As a background Task agent (not a team member), you report blockers as structured text in your response output.
-
 **DOMAIN-SPECIFIC BLOCKERS**
 
 If you encounter issues with the memory system:
 1. Check memory status with `get_status()`
-2. Report specific error to orchestrator
+2. Report specific error to the lead via SendMessage
 3. Suggest fallback (e.g., manual context capture in docs/)
 
 Common memory-specific issues:

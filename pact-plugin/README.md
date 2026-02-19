@@ -1,6 +1,6 @@
 # PACT Framework Plugin
 
-> **Version**: 3.0.6
+> **Version**: 3.3.2
 > **License**: MIT
 
 VSM-enhanced orchestration framework for AI-assisted software development with Claude Code.
@@ -76,7 +76,7 @@ After restart, test with:
 
 | Component | Description |
 |-----------|-------------|
-| **8 Specialist Agents** | Preparer, Architect, Backend/Frontend/Database Coders, n8n, Test Engineer, Memory Agent |
+| **11 Specialist Agents** | Preparer, Architect, Backend/Frontend/Database/DevOps Coders, n8n, Test Engineer, Security Engineer, QA Engineer, Memory Agent |
 | **8 Commands** | orchestrate, comPACT, rePACT, plan-mode, imPACT, peer-review, pin-memory, wrap-up |
 | **13 Skills** | Domain knowledge for architecture, coding, testing, security, n8n workflows |
 | **Protocols** | VSM-based coordination, algedonic signals, variety management |
@@ -111,6 +111,6 @@ https://github.com/ProfSynapse/PACT-prompt
 
 ## Reference
 
-- pact-protocols.md - Source of truth (see granular pact-*.md files for imports)
-- `algedonic.md` - Emergency signal protocol
-- `vsm-glossary.md` - VSM terminology in PACT context
+- [pact-protocols.md](protocols/pact-protocols.md) - Source of truth (see granular pact-*.md files for imports)
+- [algedonic.md](protocols/algedonic.md) - Emergency signal protocol
+- [vsm-glossary.md](reference/vsm-glossary.md) - VSM terminology in PACT context

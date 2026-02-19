@@ -3,7 +3,7 @@ name: pact-backend-coder
 description: |
   Use this agent to implement backend code: server-side components, APIs, business logic,
   and data processing. Use after architectural specifications are ready.
-color: yellow
+color: "#1E90FF"
 permissionMode: acceptEdits
 memory: user
 skills:

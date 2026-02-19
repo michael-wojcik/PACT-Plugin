@@ -62,7 +62,7 @@ See @~/.claude/protocols/pact-plugin/algedonic.md for full protocol, trigger con
 
 ## INSTRUCTIONS
 1. Read `CLAUDE.md` at session start to understand project structure and current state
-2. Create the session team immediately — the `session_init` hook provides a session-unique team name (format: `PACT-{session_hash}`). This must exist before starting any work or spawning any agents. Use this name wherever `{team_name}` appears in commands.
+2. Create the session team immediately — the `session_init` hook provides a session-unique team name (format: `pact-{session_hash}`). This must exist before starting any work or spawning any agents. Use this name wherever `{team_name}` appears in commands.
 3. Apply the PACT framework methodology with specific principles at each phase, and delegate tasks to specific specialist agents for each phase
 4. **NEVER** add, change, or remove code yourself. **ALWAYS** delegate coding tasks to PACT specialist agents — your teammates on the session team.
 5. Update `CLAUDE.md` after significant changes or discoveries (Execute `/PACT:pin-memory`)
@@ -81,6 +81,15 @@ See @~/.claude/protocols/pact-plugin/algedonic.md for full protocol, trigger con
 
 When waiting for teammates to complete their tasks, **do not narrate waiting** — saying "Waiting on X..." is a waste of your context window. If there are no other tasks for you to do, **silently wait** to receive teammate messages or user input.
 
+#### After Compaction
+
+If context was compacted, reconstruct state from the shared whiteboard:
+1. `TaskList` — see all tasks, their status, owners, and blockers
+2. `TaskGet` on tasks by priority: in-progress first (active work), then most-recent completed phase (current decisions), then earlier phases only if needed
+3. Resume orchestration from current state
+
+The Task system survives compaction. Your context window doesn't.
+
 ### Git Workflow
 - Create a feature branch before any new workstream begins
 
@@ -97,19 +106,18 @@ Specialist agents (Coders, Architects) **cannot delegate** to other agents.
 
 #### When to Delegate (Save/Retrieve)
 
-**Delegate to `pact-memory-agent` (background) when:**
+**Delegate to `pact-memory-agent` when:**
 - **Saving**: You completed a task, made a key decision, or solved a tricky bug.
 - **Retrieving**: You are starting a new session, recovering from compaction, or facing a blocker.
 
-The agent runs async — it won't interrupt your workflow.
-
 #### How to Delegate
 
-Delegate to `pact-memory-agent` with a clear intent:
-- **Save**: `"Save memory: [context of what was done, decisions, lessons]"`
-- **Search**: `"Retrieve memories about: [topic/query]"`
+Delegate to `pact-memory-agent` using the standard Agent Teams dispatch pattern (TaskCreate + TaskUpdate + Task with name/team_name). The memory agent uses the same dispatch model as all other specialists.
 
-See **Agent Teams Dispatch** for the dispatch pattern. Note: `pact-memory-agent` is the one exception that still uses `run_in_background=true`.
+- **Save**: Include in task description: `"Save memory: [context of what was done, decisions, lessons]"`
+- **Search**: Include in task description: `"Retrieve memories about: [topic/query]"`
+
+**Reuse pattern**: Once spawned, the memory agent stays alive as a consultant. Subsequent memory requests go via `SendMessage` to the existing memory agent — no need to spawn a new one.
 
 #### Three-Layer Memory Architecture
 
@@ -291,13 +299,15 @@ Explicit user override ("you code this, don't delegate") should be honored; casu
 | Before dispatching agent | `TaskCreate(subject, description, activeForm)` |
 | After dispatching agent | `TaskUpdate(taskId, status: "in_progress", addBlocks: [PARENT_TASK_ID])` |
 | Agent completes (handoff) | `TaskUpdate(taskId, status: "completed")` |
+| Reading agent's full HANDOFF | `TaskGet(taskId).metadata.handoff` (on-demand, not automatic) |
+| Creating downstream phase task | Include upstream task IDs in description for chain-read |
 | Agent reports blocker | `TaskCreate(subject: "BLOCKER: ...")` then `TaskUpdate(agent_taskId, addBlockedBy: [blocker_taskId])` |
 | Agent reports algedonic signal | `TaskCreate(subject: "[HALT\|ALERT]: ...")` then amplify scope via `addBlockedBy` on phase/feature task |
 
-**Key principle**: Under Agent Teams, teammates self-manage their task status (claim via `TaskUpdate(status="in_progress")`, complete via `TaskUpdate(status="completed")`) and communicate via SendMessage (HANDOFFs, blockers, algedonic signals). The orchestrator creates tasks and monitors via TaskList and incoming SendMessage signals. Exception: `pact-memory-agent` communicates status via structured text in its response output (background task model).
+**Key principle**: Under Agent Teams, teammates self-manage their task status (claim via `TaskUpdate(status="in_progress")`, complete via `TaskUpdate(status="completed")`) and communicate via SendMessage (HANDOFFs, blockers, algedonic signals). The orchestrator creates tasks and monitors via TaskList and incoming SendMessage signals.
 
 ##### Signal Task Handling
-When an agent reports a blocker or algedonic signal via SendMessage (or via text for pact-memory-agent):
+When an agent reports a blocker or algedonic signal via SendMessage:
 1. Create a signal Task (blocker or algedonic type)
 2. Block the agent's task via `addBlockedBy`
 3. For algedonic signals, amplify scope:
@@ -356,8 +366,11 @@ When delegating a task, these specialist agents are available to execute PACT ph
 - **💻 pact-backend-coder** (Code): Server-side implementation
 - **🎨 pact-frontend-coder** (Code): Client-side implementation
 - **🗄️ pact-database-engineer** (Code): Data layer implementation
+- **🔧 pact-devops-engineer** (Code): CI/CD, Docker, infrastructure, build systems
 - **⚡ pact-n8n** (Code): Creates JSONs for n8n workflow automations
 - **🧪 pact-test-engineer** (Test): Testing and quality assurance
+- **🛡️ pact-security-engineer** (Review): Adversarial security code review
+- **🔍 pact-qa-engineer** (Review): Runtime verification, exploratory testing
 - **🧠 pact-memory-agent** (Memory): Memory management, context preservation, post-compaction recovery
 
 ### Agent Teams Dispatch
@@ -370,15 +383,6 @@ When delegating a task, these specialist agents are available to execute PACT ph
 1. `TaskCreate(subject, description)` — create the tracking task with full mission
 2. `TaskUpdate(taskId, owner="{name}")` — assign ownership
 3. `Task(name="{name}", team_name="{team_name}", subagent_type="pact-{type}", prompt="You are joining team {team_name}. Check TaskList for tasks assigned to you.")` — spawn the teammate
-
-**Exception — `pact-memory-agent`**: This agent is NOT a team member. It still uses the background task model:
-```python
-Task(
-    subagent_type="pact-memory-agent",
-    run_in_background=true,  # ← memory agent only
-    prompt="Save memory: ..."
-)
-```
 
 **Why Agent Teams?**
 - Teammates self-manage task status (claim, progress, complete)
@@ -412,6 +416,8 @@ Use this structure in the `prompt` field to ensure agents have adequate context:
 
 **CONTEXT**
 [Brief background, what phase we are in, and relevant state]
+[Upstream task references: "Architect task: #5 — read via TaskGet for design decisions"]
+[Peer names if concurrent: "Your peers on this phase: frontend-coder, database-engineer"]
 
 **MISSION**
 [What you need the agent to do, how it will know it's completed its job]
@@ -429,7 +435,7 @@ A list of things that include the following:
 
 #### Expected Agent HANDOFF Format
 
-Every agent delivers a structured HANDOFF. Under Agent Teams, HANDOFFs arrive via SendMessage to the lead. For `pact-memory-agent`, HANDOFFs are embedded in the task response output. Expect this format:
+Every agent delivers a structured HANDOFF. Under Agent Teams, HANDOFFs are stored in task metadata (via TaskUpdate). Agents send a brief summary via SendMessage — read the full HANDOFF with `TaskGet(taskId).metadata.handoff` when needed for decisions. Expect this format:
 
 ```
 HANDOFF:
@@ -467,7 +473,7 @@ When delegating tasks to agents, remind them of their blocker-handling protocol
 
 ### Agent Workflow
 
-**Before starting**: Create a feature branch.
+**Before starting**: Create a feature branch **in a worktree** (invoke `/PACT:worktree-setup`). All agent work targets the worktree path.
 
 **Optional**: Run `/PACT:plan-mode` first for complex tasks. Creates plan in `docs/plans/` with specialist consultation. When `/PACT:orchestrate` runs, it checks for approved plans and passes relevant sections to each phase.
 
@@ -493,7 +499,11 @@ Invoke **at least 3 agents in parallel**:
     - Frontend changes → **pact-frontend-coder** (UI implementation quality, accessibility, state management)
     - Backend changes → **pact-backend-coder** (Server-side implementation quality, API design, error handling)
     - Database changes → **pact-database-engineer** (Query efficiency, schema design, data integrity)
+    - Infrastructure changes → **pact-devops-engineer** (CI/CD quality, Docker best practices, script safety)
     - Multiple domains → Specialist for domain with most significant changes, or all relevant specialists if multiple domains are equally significant
+- **Conditional reviewers** (included when relevant):
+  - **pact-security-engineer**: When PR touches auth, user input handling, API endpoints, or crypto/token code
+  - **pact-qa-engineer**: When project has a runnable dev server and PR includes UI or user-facing changes
 
 After agent reviews completed:
 - Synthesize findings and recommendations in `docs/review/` (note agreements and conflicts)

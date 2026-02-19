@@ -13,8 +13,8 @@ mandatory.
 This addresses the pattern where memory saves are forgotten after agent work.
 
 Note: The pact-memory-agent itself is excluded (PACT_WORK_AGENTS list) to
-avoid recursion. pact-memory-agent remains a background Task agent, NOT an
-Agent Teams teammate.
+avoid recursion — if the memory agent itself triggers this hook, it would
+create an infinite save loop.
 
 Input: JSON from stdin with `transcript`, `agent_id`, `transcript_path`
 Output: JSON with `additionalContext` forcing memory save
@@ -34,8 +34,11 @@ PACT_WORK_AGENTS = [
     "pact-backend-coder",
     "pact-frontend-coder",
     "pact-database-engineer",
-    "pact-test-engineer",
+    "pact-devops-engineer",
     "pact-n8n",
+    "pact-test-engineer",
+    "pact-security-engineer",
+    "pact-qa-engineer",
 ]
 
 # Patterns indicating meaningful work was done
@@ -117,7 +120,9 @@ You MUST now delegate to pact-memory-agent to save this context.
 This is NOT optional. Skipping this = lost context = repeated work.
 
 Action required:
-Task(subagent_type="pact-memory-agent", run_in_background=true, prompt="Save memory: [summarize what {agent_id} just did, decisions made, lessons learned]")
+SendMessage the existing pact-memory-agent teammate: "Save memory: [summarize what {agent_id} just did, decisions made, lessons learned]"
+If no memory agent is running yet, dispatch one using standard Agent Teams pattern:
+TaskCreate + TaskUpdate(owner) + Task(name="memory-agent", team_name="{{team_name}}", subagent_type="pact-memory-agent")
 
 Do this NOW before any other work.
 """

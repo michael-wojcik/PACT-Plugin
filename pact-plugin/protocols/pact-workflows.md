@@ -50,18 +50,22 @@
 
 **Trigger when**: Blocked; get similar errors repeatedly; or prior phase output is wrong.
 
-**Two questions**:
+**Three questions**:
 1. **Redo prior phase?** — Is the issue upstream in P→A→C→T?
 2. **Additional agents needed?** — Do I need subagents to assist?
+3. **Can the blocked agent resume?** — Does the original agent have partial progress worth preserving?
 
-**Three outcomes**:
+**Four outcomes**:
 | Outcome | When | Action |
 |---------|------|--------|
 | Redo solo | Prior phase broken, I can fix it | Loop back and fix yourself |
 | Redo with help | Prior phase broken, need specialist | Loop back with subagent assistance |
 | Proceed with help | Current phase correct, blocked on execution | Invoke subagents to help forward |
+| Resume | Blocker resolved, agent had partial work | `Task(resume="{agent_id}", prompt="Blocker resolved: {details}. Continue.")` |
 
-If neither question is "Yes," you're not blocked—continue.
+**Resume** is the default when blocker is resolved and the original agent had significant partial work. Read `agent_id` from task metadata: `TaskGet(taskId).metadata.agent_id`. Use fresh spawn instead when the agent's approach was wrong, it hit `maxTurns`, or its context is stale.
+
+If none of the questions yield "Yes," you're not blocked—continue.
 
 ---
 
@@ -80,6 +84,9 @@ comPACT handles tasks within ONE specialist domain. For independent sub-tasks, i
 | `prepare` | pact-preparer | Research, requirements |
 | `test` | pact-test-engineer | Standalone test tasks |
 | `architect` | pact-architect | Design guidance, pattern selection |
+| `devops` | pact-devops-engineer | CI/CD, Docker, scripts, infrastructure |
+| `security` | pact-security-engineer | Security audit of existing code |
+| `qa` | pact-qa-engineer | Runtime verification of app behavior |
 
 **Smart specialist selection**:
 - *Clear task* → Auto-select (domain keywords, file types, single-domain action)
@@ -127,8 +134,9 @@ Invoke multiple specialists of the same type when:
 ### After Specialist Completes
 
 1. **Receive handoff** from specialist(s)
-2. **Run tests** — verify work passes. If tests fail → return to specialist for fixes before committing.
-3. **Create atomic commit(s)** — stage and commit before proceeding
+2. **Verify deliverables** — confirm files listed in "Produced" were actually modified (e.g., `git diff --stat`, line counts, grep checks). Never report completion based solely on agent handoff.
+3. **Run tests** — verify work passes. If tests fail → return to specialist for fixes before committing.
+4. **Create atomic commit(s)** — stage and commit before proceeding
 
 **Next steps** — After commit, ask: "Work committed. Create PR?"
 - Yes (Recommended) → invoke `/PACT:peer-review`
