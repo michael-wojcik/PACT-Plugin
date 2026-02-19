@@ -7,6 +7,7 @@ Used by: hooks.json SessionEnd hook
 
 Actions:
 1. Write last-session snapshot to ~/.claude/pact-sessions/{slug}/last-session.md
+2. Clean up stale pact-* team directories with <=1 member (and their task dirs)
 
 Cannot block session termination — fire-and-forget.
 
@@ -14,6 +15,8 @@ Input: JSON from stdin with session context
 Output: None (SessionEnd hooks cannot inject context)
 """
 
+import json
+import shutil
 import sys
 import os
 from datetime import datetime, timezone
@@ -137,6 +140,63 @@ def write_session_snapshot(
     snapshot_file.write_text("\n".join(lines), encoding="utf-8")
 
 
+def cleanup_stale_teams(teams_dir: str | None = None) -> list[str]:
+    """
+    Remove stale pact-* team directories that have <=1 member (just the lead).
+
+    Scans ~/.claude/teams/ for pact-* directories, reads config.json to check
+    member count, and removes teams where only the lead remains (session already
+    ending). Also removes corresponding task directories under ~/.claude/tasks/.
+
+    This is best-effort: errors are silently ignored to never block session end.
+
+    Args:
+        teams_dir: Override for teams base directory (for testing)
+
+    Returns:
+        List of team names that were cleaned up.
+    """
+    if teams_dir is None:
+        teams_dir = str(Path.home() / ".claude" / "teams")
+
+    teams_path = Path(teams_dir)
+    if not teams_path.is_dir():
+        return []
+
+    cleaned = []
+    for team_dir in teams_path.iterdir():
+        if not team_dir.is_dir() or not team_dir.name.startswith("pact-"):
+            continue
+
+        config_file = team_dir / "config.json"
+        if not config_file.exists():
+            # No config = stale directory, safe to remove
+            shutil.rmtree(str(team_dir), ignore_errors=True)
+            cleaned.append(team_dir.name)
+            continue
+
+        try:
+            config = json.loads(config_file.read_text(encoding="utf-8"))
+            members = config.get("members", [])
+            # Only clean up teams with <=1 member (just the lead, already ending)
+            if len(members) <= 1:
+                shutil.rmtree(str(team_dir), ignore_errors=True)
+                cleaned.append(team_dir.name)
+        except (json.JSONDecodeError, OSError):
+            # Corrupted config — skip, don't remove
+            continue
+
+    # Also clean corresponding task directories
+    tasks_base = Path(teams_dir).parent / "tasks"
+    if tasks_base.is_dir():
+        for team_name in cleaned:
+            task_dir = tasks_base / team_name
+            if task_dir.is_dir():
+                shutil.rmtree(str(task_dir), ignore_errors=True)
+
+    return cleaned
+
+
 def main():
     try:
         project_slug = get_project_slug()
@@ -147,6 +207,9 @@ def main():
             tasks=tasks,
             project_slug=project_slug,
         )
+
+        # Best-effort cleanup of stale team directories from prior sessions
+        cleanup_stale_teams()
 
         sys.exit(0)
 
