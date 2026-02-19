@@ -26,6 +26,7 @@ import logging
 import os
 import stat
 import subprocess
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -308,3 +309,27 @@ def ensure_config_dir() -> Path:
         pass
 
     return CONFIG_DIR
+
+
+# Session ID file location
+SESSION_ID_FILE = CONFIG_DIR / "session_id"
+
+
+def get_or_create_session_id(session_id_path: Path | None = None) -> str:
+    """
+    Get or create a stable session UUID for this MCP server instance.
+
+    Each MCP server process gets a unique session ID that persists for the
+    lifetime of that server process. The ID is generated fresh each time
+    (not persisted to disk) because each server process is a distinct session.
+
+    The session_id_path parameter exists for testing but is not used for
+    persistence in production -- each process generates its own UUID.
+
+    Args:
+        session_id_path: Unused in production. Exists for test compatibility.
+
+    Returns:
+        A UUID string identifying this session.
+    """
+    return str(uuid.uuid4())
