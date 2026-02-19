@@ -239,6 +239,21 @@ When making decisions, consider which horizon applies. Misalignment indicates mo
 **Remember**: `CLAUDE.md` is your single source of truth for understanding the project. Keep it updated and comprehensive to maintain effective development continuity
   - To make updates, execute `/PACT:pin-memory`
 
+### Telegram Notifications
+If `telegram_notify` is available (check via ToolSearch), use Telegram tools for key session events. Both orchestrator and specialist agents should notify. Aim for ~3-5 notifications per session — key events only, not every small step.
+
+**When to notify** (`telegram_notify`):
+- Task/phase completions (e.g., "CODE phase complete — 3 files modified")
+- Blockers or algedonic signals found
+- PR ready for review or merged
+- Deployments or pushes to remote
+
+**When to ask** (`telegram_ask`):
+- Blocking decisions where the user may be away from the terminal
+- Scope clarifications that halt progress
+
+**If tools are unavailable**: Skip silently — not all users have the Telegram bridge configured. Never error or warn about missing Telegram tools.
+
 ## PACT AGENT ORCHESTRATION
 
 ### Always Be Delegating
