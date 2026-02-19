@@ -44,6 +44,7 @@ if "mcp" not in sys.modules:
     sys.modules["mcp.server"] = _mcp_server
     sys.modules["mcp.server.fastmcp"] = _mcp_server_fastmcp
 
+from telegram.routing import DirectRouter
 from telegram.server import (
     _process_update,
     _extract_message_id,
@@ -321,10 +322,11 @@ class TestPollingLoop:
             raise asyncio.CancelledError()
 
         tool_context.client.get_updates = fake_get_updates
+        router = DirectRouter(tool_context.client)
 
         with patch("telegram.server._process_update", new_callable=AsyncMock) as mock_process:
             with pytest.raises(asyncio.CancelledError):
-                await _polling_loop(tool_context)
+                await _polling_loop(tool_context, router)
 
         mock_process.assert_awaited_once()
 
@@ -341,10 +343,11 @@ class TestPollingLoop:
             raise asyncio.CancelledError()
 
         tool_context.client.get_updates = fake_get_updates
+        router = DirectRouter(tool_context.client)
 
         with patch("telegram.server.asyncio.sleep", new_callable=AsyncMock) as mock_sleep:
             with pytest.raises(asyncio.CancelledError):
-                await _polling_loop(tool_context)
+                await _polling_loop(tool_context, router)
 
         mock_sleep.assert_awaited_once_with(ERROR_BACKOFF)
 
@@ -352,9 +355,10 @@ class TestPollingLoop:
     async def test_propagates_cancellation(self, tool_context):
         """Should propagate CancelledError for clean shutdown."""
         tool_context.client.get_updates = AsyncMock(side_effect=asyncio.CancelledError())
+        router = DirectRouter(tool_context.client)
 
         with pytest.raises(asyncio.CancelledError):
-            await _polling_loop(tool_context)
+            await _polling_loop(tool_context, router)
 
 
 # =============================================================================

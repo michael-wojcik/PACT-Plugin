@@ -29,7 +29,8 @@ from typing import AsyncIterator
 
 from mcp.server.fastmcp import FastMCP
 
-from telegram.config import load_config_safe
+from telegram.config import get_or_create_session_id, load_config_safe
+from telegram.routing import DirectRouter, FileBasedRouter, UpdateRouter, count_active_sessions
 from telegram.telegram_client import TelegramClient
 from telegram.tools import (
     get_context,
@@ -54,14 +55,19 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
     """
     MCP server lifespan manager.
 
-    Handles startup (config loading, polling loop start) and shutdown
-    (polling loop cancellation, resource cleanup).
+    Handles startup (config loading, router selection, polling loop start)
+    and shutdown (polling loop cancellation, router cleanup, resource cleanup).
+
+    Router selection:
+    - Single session (or first session): DirectRouter (zero overhead)
+    - Multiple sessions detected: FileBasedRouter (file-based coordination)
 
     Yields:
         Empty dict (no lifespan state needed by tools).
     """
     ctx = get_context()
     polling_task: asyncio.Task | None = None
+    router: UpdateRouter | None = None
 
     try:
         # Load configuration (graceful no-op if missing)
@@ -69,15 +75,41 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
 
         if config is not None:
             ctx.initialize(config)
-            logger.info(
-                "pact-telegram initialized (mode=%s, voice=%s)",
-                config.get("mode", "unknown"),
-                "yes" if config.get("openai_api_key") else "no",
-            )
+
+            # Generate a session ID for this MCP server instance
+            session_id = get_or_create_session_id()
+
+            # Select router based on active session count
+            active_sessions = count_active_sessions()
+            if active_sessions > 0:
+                # Other sessions exist -- use FileBasedRouter for coordination
+                router = FileBasedRouter(ctx.client, session_id=session_id)
+                logger.info(
+                    "pact-telegram initialized with FileBasedRouter "
+                    "(mode=%s, voice=%s, active_sessions=%d)",
+                    config.get("mode", "unknown"),
+                    "yes" if config.get("openai_api_key") else "no",
+                    active_sessions,
+                )
+            else:
+                # Single session -- use DirectRouter (zero overhead)
+                router = DirectRouter(ctx.client)
+                logger.info(
+                    "pact-telegram initialized with DirectRouter "
+                    "(mode=%s, voice=%s)",
+                    config.get("mode", "unknown"),
+                    "yes" if config.get("openai_api_key") else "no",
+                )
+
+            # Store router in context for tools.py to access
+            ctx.router = router
+
+            # Start router
+            await router.start(session_id)
 
             # Start background polling loop
             polling_task = asyncio.create_task(
-                _polling_loop(ctx),
+                _polling_loop(ctx, router),
                 name="telegram-polling",
             )
         else:
@@ -94,13 +126,20 @@ async def lifespan(server: FastMCP) -> AsyncIterator[dict]:
             except asyncio.CancelledError:
                 pass
 
+        if router is not None:
+            await router.stop()
+
         await ctx.close()
         logger.info("pact-telegram shut down")
 
 
-async def _polling_loop(ctx) -> None:
+async def _polling_loop(ctx, router: UpdateRouter) -> None:
     """
     Background task that polls Telegram for incoming messages.
+
+    Uses the provided UpdateRouter to get updates. For DirectRouter,
+    this calls client.get_updates() directly. For FileBasedRouter,
+    updates are coordinated across multiple sessions.
 
     Routes replies to pending telegram_ask Futures based on
     reply_to_message_id matching. Handles voice note transcription
@@ -108,13 +147,13 @@ async def _polling_loop(ctx) -> None:
 
     Args:
         ctx: The shared ToolContext from tools.py.
+        router: The UpdateRouter instance for retrieving updates.
     """
-    client: TelegramClient = ctx.client
     logger.info("Telegram polling loop started")
 
     while True:
         try:
-            updates = await client.get_updates(timeout=30)
+            updates = await router.get_updates(timeout=30)
 
             for update in updates:
                 await _process_update(ctx, update)

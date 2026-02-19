@@ -134,6 +134,9 @@ class ToolContext:
         self.configured: bool = False
         self.start_time: float = time.time()
 
+        # UpdateRouter instance (set by server.py lifespan)
+        self.router: Any | None = None
+
         # Pending telegram_ask replies: {message_id: asyncio.Future}
         self.pending_replies: dict[int, asyncio.Future[str]] = {}
 
@@ -420,6 +423,9 @@ async def tool_telegram_notify(
         msg_id = result.get("message_id")
         if msg_id is not None:
             _ctx.track_notification(msg_id, message)
+            # Register with router for multi-session reply routing
+            if _ctx.router is not None:
+                await _ctx.router.register_message(msg_id)
         return f"Notification sent (message_id: {msg_id or '?'})"
 
     except TelegramAPIError as e:
@@ -491,6 +497,10 @@ async def tool_telegram_ask(
         sent_message_id = result.get("message_id")
         if sent_message_id is None:
             return "Failed to send question: no message_id in response"
+
+        # Register with router for multi-session reply routing
+        if _ctx.router is not None:
+            await _ctx.router.register_message(sent_message_id)
 
         # Register a Future for this question
         loop = asyncio.get_running_loop()
