@@ -215,6 +215,44 @@ class TestWriteSessionSnapshot:
         assert "## Unresolved" in content
         assert "#10 BLOCKER: missing API key" in content
 
+    def test_truncates_long_decision_summary(self, tmp_path):
+        """Decision strings longer than 80 chars should be truncated to 77 + '...'."""
+        from session_end import write_session_snapshot
+
+        long_decision = "A" * 100  # 100 chars, well over 80-char threshold
+
+        tasks = [
+            {
+                "id": "15",
+                "subject": "CODE: auth",
+                "status": "completed",
+                "metadata": {
+                    "handoff": {
+                        "produced": ["src/auth.py"],
+                        "decisions": [long_decision, "Short decision"],
+                        "uncertainty": [],
+                        "integration": [],
+                        "open_questions": [],
+                    }
+                },
+            }
+        ]
+
+        write_session_snapshot(
+            tasks=tasks,
+            project_slug="trunc-proj",
+            sessions_dir=str(tmp_path),
+        )
+
+        content = (tmp_path / "trunc-proj" / "last-session.md").read_text()
+        # The first decision (used as summary) should be truncated
+        expected_summary = "A" * 77 + "..."
+        assert expected_summary in content
+        # The full 100-char string should NOT appear in the completed task line
+        assert long_decision not in content.split("## Key Decisions")[0]
+        # But the full decision DOES appear in Key Decisions section (not truncated there)
+        assert long_decision in content
+
 
 class TestMainEntryPoint:
     """Tests for session_end.main() exit behavior."""

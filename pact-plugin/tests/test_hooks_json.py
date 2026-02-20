@@ -9,6 +9,8 @@ Tests cover:
 4. All referenced Python scripts exist on disk
 5. TeammateIdle hook entry exists (new in SDK optimization)
 6. SessionEnd is async (new in SDK optimization)
+7. Matcher patterns use valid pipe syntax
+8. SubagentStart matcher covers all PACT agent types
 """
 import json
 import sys
@@ -231,3 +233,66 @@ class TestNewSDKOptimizationEntries:
                     assert hook.get("async", False) is not True, (
                         "track_files.py should be synchronous"
                     )
+
+
+AGENTS_DIR = Path(__file__).parent.parent / "agents"
+
+
+class TestMatcherPatterns:
+    """Validate matcher patterns use correct pipe-separated syntax."""
+
+    def _get_all_matchers(self, hooks_config) -> list[tuple[str, str]]:
+        """Extract all (event_type, matcher) pairs from hooks.json."""
+        matchers = []
+        for event_type, entries in hooks_config["hooks"].items():
+            for entry in entries:
+                if "matcher" in entry:
+                    matchers.append((event_type, entry["matcher"]))
+        return matchers
+
+    def test_no_empty_segments_in_matchers(self, hooks_config):
+        """Pipe-separated matchers must not have empty segments (e.g., '|foo' or 'foo||bar')."""
+        errors = []
+        for event_type, matcher in self._get_all_matchers(hooks_config):
+            segments = matcher.split("|")
+            for i, seg in enumerate(segments):
+                if seg.strip() == "":
+                    errors.append(
+                        f"{event_type}: matcher '{matcher}' has empty segment at position {i}"
+                    )
+        assert errors == [], f"Invalid matcher patterns:\n" + "\n".join(errors)
+
+    def test_no_leading_or_trailing_pipes(self, hooks_config):
+        """Matchers must not start or end with '|'."""
+        errors = []
+        for event_type, matcher in self._get_all_matchers(hooks_config):
+            if matcher.startswith("|"):
+                errors.append(f"{event_type}: matcher starts with '|': '{matcher}'")
+            if matcher.endswith("|"):
+                errors.append(f"{event_type}: matcher ends with '|': '{matcher}'")
+        assert errors == [], f"Invalid matcher patterns:\n" + "\n".join(errors)
+
+    def test_subagent_start_covers_all_agent_types(self, hooks_config):
+        """SubagentStart matcher must include all PACT agent types from agents/ directory."""
+        # Read expected agent names from disk
+        expected_agents = set()
+        for agent_file in AGENTS_DIR.glob("*.md"):
+            # Agent files are named pact-{type}.md — the stem is the agent name
+            expected_agents.add(agent_file.stem)
+
+        assert len(expected_agents) > 0, "No agent files found in agents/ directory"
+
+        # Extract the SubagentStart matcher
+        subagent_start_entries = hooks_config["hooks"].get("SubagentStart", [])
+        matcher_agents = set()
+        for entry in subagent_start_entries:
+            if "matcher" in entry:
+                matcher_agents.update(entry["matcher"].split("|"))
+
+        # Every agent definition should appear in the matcher
+        missing = expected_agents - matcher_agents
+        assert missing == set(), (
+            f"SubagentStart matcher is missing agent types: {sorted(missing)}. "
+            f"Matcher has: {sorted(matcher_agents)}. "
+            f"Expected from agents/: {sorted(expected_agents)}"
+        )
