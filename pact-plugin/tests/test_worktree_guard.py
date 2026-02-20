@@ -130,12 +130,15 @@ class TestSuggestWorktreePath:
         from worktree_guard import _suggest_worktree_path
 
         # Two unrelated directories under same tmp_path
-        dir_a = tmp_path / "workspace" / "main"
-        dir_b = tmp_path / "workspace" / "branch"
+        workspace = tmp_path / "workspace"
+        dir_a = workspace / "main"
+        dir_b = workspace / "branch"
         dir_a_src = dir_a / "src"
         dir_a_src.mkdir(parents=True)
         dir_b.mkdir(parents=True)
         (dir_a_src / "app.py").touch()
+        # Common ancestor must have a project marker for validation
+        (workspace / ".git").mkdir()
 
         result = _suggest_worktree_path(
             str(dir_a_src / "app.py"),
@@ -144,6 +147,25 @@ class TestSuggestWorktreePath:
         # Should produce dir_b/main/src/app.py or similar via common ancestor
         assert result is not None
         assert str(dir_b) in result
+
+    def test_rejects_common_ancestor_without_project_marker(self, tmp_path):
+        """Common-prefix fallback returns None when ancestor lacks project marker."""
+        from worktree_guard import _suggest_worktree_path
+
+        # Two directories sharing a common prefix but no .git/.worktrees/CLAUDE.md
+        workspace = tmp_path / "workspace"
+        dir_a = workspace / "main" / "src"
+        dir_b = workspace / "branch"
+        dir_a.mkdir(parents=True)
+        dir_b.mkdir(parents=True)
+        (dir_a / "app.py").touch()
+        # No project marker at workspace — should reject
+
+        result = _suggest_worktree_path(
+            str(dir_a / "app.py"),
+            str(dir_b)
+        )
+        assert result is None
 
     def test_returns_none_on_path_error(self):
         from worktree_guard import _suggest_worktree_path

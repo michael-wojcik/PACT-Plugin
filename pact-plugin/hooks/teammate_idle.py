@@ -181,7 +181,11 @@ def check_idle_cleanup(
     Track idle counts for completed agents and determine cleanup action.
 
     Only counts idles for teammates whose task is completed (not stalled agents,
-    which need triage, not shutdown).
+    which need triage, not shutdown). Resets count when the teammate's task
+    changes (detected via last_seen_task_id).
+
+    The idle counts file stores per-teammate entries as:
+        {teammate_name: {"count": N, "task_id": "X"}}
 
     Args:
         tasks: List of all tasks
@@ -209,10 +213,23 @@ def check_idle_cleanup(
     if metadata.get("stalled") or metadata.get("terminated"):
         return None, False
 
-    # Increment idle count
+    # Read current tracking data
     counts = read_idle_counts(idle_counts_path)
-    current = counts.get(teammate_name, 0) + 1
-    counts[teammate_name] = current
+    current_task_id = task.get("id", "")
+    entry = counts.get(teammate_name, {})
+
+    # Migrate legacy format: plain int -> structured dict
+    if isinstance(entry, int):
+        entry = {"count": entry, "task_id": ""}
+
+    # Reset count if the teammate's task changed (reassigned to new work)
+    last_task_id = entry.get("task_id", "")
+    if last_task_id and last_task_id != current_task_id:
+        entry = {"count": 0, "task_id": current_task_id}
+
+    # Increment idle count
+    current = entry.get("count", 0) + 1
+    counts[teammate_name] = {"count": current, "task_id": current_task_id}
     write_idle_counts(idle_counts_path, counts)
 
     if current >= IDLE_FORCE_THRESHOLD:

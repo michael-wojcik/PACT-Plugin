@@ -594,8 +594,8 @@ class TestConcurrentIdleTracking:
             make_task(task_id="2", status="completed", owner="coder-b"),
         ]
 
-        # coder-a idles 3 times
-        write_idle_counts(counts_path, {"coder-a": 2})
+        # coder-a idles 3 times (pre-seed with structured format)
+        write_idle_counts(counts_path, {"coder-a": {"count": 2, "task_id": "1"}})
         msg_a, _ = check_idle_cleanup(tasks, "coder-a", counts_path)
         assert msg_a is not None  # Suggest at 3
         assert "coder-a" in msg_a
@@ -605,8 +605,8 @@ class TestConcurrentIdleTracking:
         assert msg_b is None  # Below threshold
 
         counts = read_idle_counts(counts_path)
-        assert counts["coder-a"] == 3
-        assert counts["coder-b"] == 1
+        assert counts["coder-a"]["count"] == 3
+        assert counts["coder-b"]["count"] == 1
 
     def test_one_agent_shutdown_doesnt_affect_others(self, tmp_path):
         """Force-shutdown of one agent should not affect others' counts."""
@@ -619,7 +619,10 @@ class TestConcurrentIdleTracking:
             make_task(task_id="2", status="completed", owner="coder-b"),
         ]
 
-        write_idle_counts(counts_path, {"coder-a": 4, "coder-b": 1})
+        write_idle_counts(counts_path, {
+            "coder-a": {"count": 4, "task_id": "1"},
+            "coder-b": {"count": 1, "task_id": "2"},
+        })
 
         # coder-a hits force threshold (5)
         msg_a, shutdown_a = check_idle_cleanup(tasks, "coder-a", counts_path)
@@ -631,8 +634,8 @@ class TestConcurrentIdleTracking:
         assert msg_b is None
 
         counts = read_idle_counts(counts_path)
-        assert counts["coder-a"] == 5
-        assert counts["coder-b"] == 2
+        assert counts["coder-a"]["count"] == 5
+        assert counts["coder-b"]["count"] == 2
 
 
 class TestFindTeammateTaskEdgeCases:
