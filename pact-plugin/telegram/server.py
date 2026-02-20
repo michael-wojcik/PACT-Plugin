@@ -1,7 +1,7 @@
 """
 Location: pact-plugin/telegram/server.py
 Summary: FastMCP server setup for the pact-telegram bridge (stdio transport).
-Used by: __main__.py (entry point spawned by Claude Code via .mcp.json).
+Used by: __main__.py (entry point spawned by Claude Code MCP registration).
 
 Creates the MCP server with four tools (telegram_notify, telegram_ask,
 telegram_check_replies, telegram_status) and manages the background
@@ -278,6 +278,30 @@ def create_server() -> FastMCP:
     """
     server = FastMCP(
         "pact-telegram",
+        instructions=(
+            "pact-telegram bridges Claude Code sessions to the user's Telegram chat. "
+            "Use these tools proactively when available.\n\n"
+            "Available tools:\n"
+            "- telegram_notify: Send a one-way notification (completions, deployments, alerts). Non-blocking.\n"
+            "- telegram_ask: Ask a blocking question with optional quick-reply buttons; supports text and voice replies.\n"
+            "- telegram_check_replies: Poll for queued replies to previous notifications. Non-blocking.\n"
+            "- telegram_status: Health check (connection, mode, queue depth).\n\n"
+            "When to notify (target ~3-5 per session):\n"
+            "- Task or phase completions\n"
+            "- Blockers found or algedonic signals\n"
+            "- PR ready for review or merged\n"
+            "- Deployments pushed\n\n"
+            "When to use telegram_ask:\n"
+            "- Blocking decisions where user may be away from terminal\n"
+            "- Scope clarifications that cannot proceed without input\n\n"
+            "When to check replies (telegram_check_replies):\n"
+            "- Between tasks or phases — check if user reacted to any notification\n"
+            "- After sending important notifications — user may reply with corrections or new instructions\n\n"
+            "Multi-session behavior:\n"
+            "- Messages are prefixed with [ProjectName] for session identification\n"
+            "- Multiple sessions coordinate via file-based polling — replies route to the correct session\n"
+            "- If telegram tools are not available, skip silently (not all users have the bridge)"
+        ),
         lifespan=lifespan,
     )
 
@@ -365,8 +389,8 @@ def main() -> None:
     """
     Direct-execution entry point.
 
-    Used when server.py is run directly via .mcp.json registration:
-        python3 ${CLAUDE_PLUGIN_ROOT}/telegram/server.py
+    Used when server.py is run directly:
+        python3 telegram/server.py
 
     Sets up logging to stderr (stdout is reserved for MCP stdio transport)
     and starts the server.
