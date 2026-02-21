@@ -248,7 +248,7 @@ def is_termination_signal(content: str, workflow_name: str) -> bool:
     """
     signals = TERMINATION_SIGNALS.get(workflow_name, [])
     for signal_pattern in signals:
-        if re.search(signal_pattern, content, re.IGNORECASE):
+        if re.search(signal_pattern, content, re.IGNORECASE | re.MULTILINE):
             return True
     return False
 

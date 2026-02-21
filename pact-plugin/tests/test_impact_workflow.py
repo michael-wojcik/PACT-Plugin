@@ -159,6 +159,15 @@ class TestImPACTTerminationSignals:
         assert is_termination_signal("Analyzing the blocker...", "imPACT") is False
         assert is_termination_signal("Assessing whether to redo prior phase", "imPACT") is False
 
+    def test_v350_casual_mentions_do_not_match(self):
+        """Test that casual mid-sentence mentions of v3.5.0 outcomes don't false-match."""
+        assert is_termination_signal("Need to augment present phase approach", "imPACT") is False
+        assert is_termination_signal("Should we invoke rePACT here?", "imPACT") is False
+        assert is_termination_signal("We may need to terminate agent soon", "imPACT") is False
+        assert is_termination_signal("The agent is not truly blocked yet", "imPACT") is False
+        assert is_termination_signal("We could escalate to user if needed", "imPACT") is False
+        assert is_termination_signal("Considering whether to redo prior phase", "imPACT") is False
+
     def test_case_insensitive_termination(self):
         """Test termination signals are case insensitive."""
         assert is_termination_signal("REDO SOLO", "imPACT") is True
