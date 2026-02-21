@@ -172,6 +172,57 @@ def write_idle_counts(idle_counts_path: str, counts: dict) -> None:
         path.write_text(json.dumps(counts), encoding="utf-8")
 
 
+def _atomic_update_idle_counts(
+    idle_counts_path: str,
+    mutator: "Callable[[dict], dict]",
+) -> dict:
+    """
+    Atomically read, mutate, and write the idle counts file under a single lock.
+
+    This prevents TOCTOU races where two concurrent TeammateIdle events both
+    read stale state before either writes, causing one update to be lost.
+
+    On platforms without flock (Windows), falls back to non-atomic read+write
+    which is acceptable since concurrent hook invocations are unlikely there.
+
+    Args:
+        idle_counts_path: Path to the idle_counts.json file
+        mutator: Callable that receives the current counts dict and returns
+                 the updated counts dict to write back
+
+    Returns:
+        The updated counts dict after mutation
+    """
+    path = Path(idle_counts_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    if HAS_FLOCK:
+        with open(path, "a+") as f:
+            fcntl.flock(f, fcntl.LOCK_EX)
+            try:
+                f.seek(0)
+                content = f.read()
+                try:
+                    counts = json.loads(content) if content.strip() else {}
+                except json.JSONDecodeError:
+                    counts = {}
+
+                counts = mutator(counts)
+
+                f.seek(0)
+                f.truncate()
+                f.write(json.dumps(counts))
+            finally:
+                fcntl.flock(f, fcntl.LOCK_UN)
+    else:
+        # Fallback: non-atomic read+write (no flock available)
+        counts = read_idle_counts(idle_counts_path)
+        counts = mutator(counts)
+        path.write_text(json.dumps(counts), encoding="utf-8")
+
+    return counts
+
+
 def check_idle_cleanup(
     tasks: list[dict],
     teammate_name: str,
@@ -202,10 +253,10 @@ def check_idle_cleanup(
     # Only track idles for completed tasks
     if not task or task.get("status") != "completed":
         # Reset count if agent no longer has a completed task (got new work)
-        counts = read_idle_counts(idle_counts_path)
-        if teammate_name in counts:
-            del counts[teammate_name]
-            write_idle_counts(idle_counts_path, counts)
+        def _remove(counts: dict) -> dict:
+            counts.pop(teammate_name, None)
+            return counts
+        _atomic_update_idle_counts(idle_counts_path, _remove)
         return None, False
 
     # Don't count stalled agents for idle cleanup — they need triage
@@ -213,24 +264,35 @@ def check_idle_cleanup(
     if metadata.get("stalled") or metadata.get("terminated"):
         return None, False
 
-    # Read current tracking data
-    counts = read_idle_counts(idle_counts_path)
     current_task_id = task.get("id", "")
-    entry = counts.get(teammate_name, {})
 
-    # Migrate legacy format: plain int -> structured dict
-    if isinstance(entry, int):
-        entry = {"count": entry, "task_id": ""}
+    # Atomically read-modify-write the idle count to prevent TOCTOU races
+    # between concurrent TeammateIdle events for different agents.
+    result = {"count": 0}
 
-    # Reset count if the teammate's task changed (reassigned to new work)
-    last_task_id = entry.get("task_id", "")
-    if last_task_id and last_task_id != current_task_id:
-        entry = {"count": 0, "task_id": current_task_id}
+    def _increment(counts: dict) -> dict:
+        entry = counts.get(teammate_name, {})
 
-    # Increment idle count
-    current = entry.get("count", 0) + 1
-    counts[teammate_name] = {"count": current, "task_id": current_task_id}
-    write_idle_counts(idle_counts_path, counts)
+        # Migrate legacy format: plain int -> structured dict
+        if isinstance(entry, int):
+            entry = {"count": entry, "task_id": ""}
+
+        # Reset count if the teammate's task changed (reassigned to new work)
+        last_task_id = entry.get("task_id", "")
+        if last_task_id and last_task_id != current_task_id:
+            entry = {"count": 0, "task_id": current_task_id}
+
+        # Increment idle count
+        entry["count"] = entry.get("count", 0) + 1
+        entry["task_id"] = current_task_id
+        counts[teammate_name] = entry
+
+        # Capture the count for the caller via closure
+        result["count"] = entry["count"]
+        return counts
+
+    _atomic_update_idle_counts(idle_counts_path, _increment)
+    current = result["count"]
 
     if current >= IDLE_FORCE_THRESHOLD:
         return (
@@ -255,63 +317,69 @@ def reset_idle_count(teammate_name: str, idle_counts_path: str) -> None:
         teammate_name: Name of the teammate
         idle_counts_path: Path to the idle_counts.json file
     """
-    counts = read_idle_counts(idle_counts_path)
-    if teammate_name in counts:
-        del counts[teammate_name]
-        write_idle_counts(idle_counts_path, counts)
+    def _remove(counts: dict) -> dict:
+        counts.pop(teammate_name, None)
+        return counts
+    _atomic_update_idle_counts(idle_counts_path, _remove)
 
 
 def main():
-    team_name = os.environ.get("CLAUDE_CODE_TEAM_NAME", "").lower()
-    if not team_name:
-        sys.exit(0)
-
     try:
-        input_data = json.load(sys.stdin)
-    except json.JSONDecodeError:
-        sys.exit(0)
+        team_name = os.environ.get("CLAUDE_CODE_TEAM_NAME", "").lower()
+        if not team_name:
+            sys.exit(0)
 
-    teammate_name = input_data.get("teammate_name", "")
-    if not teammate_name:
-        sys.exit(0)
+        try:
+            input_data = json.load(sys.stdin)
+        except json.JSONDecodeError:
+            sys.exit(0)
 
-    tasks = get_task_list()
-    if not tasks:
-        sys.exit(0)
+        teammate_name = input_data.get("teammate_name", "")
+        if not teammate_name:
+            sys.exit(0)
 
-    idle_counts_path = str(
-        Path.home() / ".claude" / "teams" / team_name / "idle_counts.json"
-    )
+        tasks = get_task_list()
+        if not tasks:
+            sys.exit(0)
 
-    messages = []
-    should_shutdown = False
-
-    # Check for stall (in_progress task + idle)
-    stall_msg = detect_stall(tasks, teammate_name)
-    if stall_msg:
-        messages.append(stall_msg)
-    else:
-        # Only check idle cleanup if not stalled
-        # (stalled agents need triage, not shutdown)
-        cleanup_msg, should_shutdown = check_idle_cleanup(
-            tasks, teammate_name, idle_counts_path
+        idle_counts_path = str(
+            Path.home() / ".claude" / "teams" / team_name / "idle_counts.json"
         )
-        if cleanup_msg:
-            messages.append(cleanup_msg)
 
-    if messages:
-        if should_shutdown:
-            # Hooks cannot call SendMessage directly. Instruct the orchestrator
-            # to send a shutdown_request via systemMessage.
-            messages.append(
-                f"ACTION REQUIRED: Send shutdown_request to '{teammate_name}' "
-                f"via SendMessage(type=\"shutdown_request\", recipient=\"{teammate_name}\")."
+        messages = []
+        should_shutdown = False
+
+        # Check for stall (in_progress task + idle)
+        stall_msg = detect_stall(tasks, teammate_name)
+        if stall_msg:
+            messages.append(stall_msg)
+        else:
+            # Only check idle cleanup if not stalled
+            # (stalled agents need triage, not shutdown)
+            cleanup_msg, should_shutdown = check_idle_cleanup(
+                tasks, teammate_name, idle_counts_path
             )
+            if cleanup_msg:
+                messages.append(cleanup_msg)
 
-        output = {"systemMessage": " | ".join(messages)}
-        print(json.dumps(output))
+        if messages:
+            if should_shutdown:
+                # Hooks cannot call SendMessage directly. Instruct the orchestrator
+                # to send a shutdown_request via systemMessage.
+                messages.append(
+                    f"ACTION REQUIRED: Send shutdown_request to '{teammate_name}' "
+                    f"via SendMessage(type=\"shutdown_request\", recipient=\"{teammate_name}\")."
+                )
 
-    sys.exit(0)
+            output = {"systemMessage": " | ".join(messages)}
+            print(json.dumps(output))
+
+        sys.exit(0)
+
+    except Exception as e:
+        # Don't block on errors — just warn and exit cleanly
+        print(f"Hook warning (teammate_idle): {e}", file=sys.stderr)
+        sys.exit(0)
 
 
 if __name__ == "__main__":
