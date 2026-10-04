@@ -78,7 +78,7 @@ After restart, test with:
 |-----------|-------------|
 | **11 Specialist Agents** | Preparer, Architect, Backend/Frontend/Database/DevOps Coders, n8n, Test Engineer, Security Engineer, QA Engineer, Memory Agent |
 | **9 Commands** | orchestrate, comPACT, rePACT, plan-mode, imPACT, peer-review, pin-memory, wrap-up, telegram-setup |
-| **13 Skills** | Domain knowledge for architecture, coding, testing, security, n8n workflows |
+| **16 Skills** | Phase (5), n8n (7), `pact-memory`, `pact-agent-teams`, `worktree-setup`, `worktree-cleanup` |
 | **Protocols** | VSM-based coordination, algedonic signals, variety management |
 
 ## Quick Start
