@@ -163,9 +163,9 @@ Then use natural language or commands:
 
 ---
 
-## Skills (13 Domain Knowledge Modules)
+## Skills (16)
 
-Skills provide specialized knowledge that loads on-demand:
+Skills provide specialized knowledge and workflow procedures. Domain skills load when an agent invokes them — do not assume they auto-load from agent frontmatter.
 
 ### PACT Phase Skills
 | Skill | Triggers On |
@@ -191,6 +191,13 @@ Skills provide specialized knowledge that loads on-demand:
 | Skill | Triggers On |
 |-------|-------------|
 | `pact-memory` | Save/search memories, lessons learned |
+
+### Coordination Skills
+| Skill | Triggers On |
+|-------|-------------|
+| `pact-agent-teams` | Agent Teams teammate protocol (frontmatter-loaded) |
+| `worktree-setup` | Isolated feature/sub-scope worktrees |
+| `worktree-cleanup` | Remove worktrees after merge or abort |
 
 ---
 
@@ -288,8 +295,8 @@ PACT-prompt/
 │   ├── .claude-plugin/
 │   │   └── plugin.json         # Plugin definition
 │   ├── agents/                 # 11 specialist agents
-│   ├── commands/               # 8 PACT workflow commands
-│   ├── skills/                 # 13 domain knowledge skills
+│   ├── commands/               # 9 PACT workflow commands
+│   ├── skills/                 # 16 skills (phase, n8n, memory, coordination)
 │   ├── hooks/                  # Automation hooks
 │   ├── protocols/              # Coordination protocols
 │   └── CLAUDE.md               # Orchestrator configuration
@@ -329,13 +336,11 @@ PACT uses the **Viable System Model** for intelligent coordination:
 
 ### Hooks (Automation)
 
-| Hook | Trigger | Purpose |
-|------|---------|---------|
-| `session_init.py` | Session start | Load active plans, check memory |
-| `phase_completion.py` | Agent completes | Remind about decision logs |
-| `validate_handoff.py` | Agent handoff | Verify output quality |
-| `track_files.py` | File edit/write | Track files for memory graph |
-| `memory_prompt.py` | Session end | Prompt to save learnings |
+Published automation is defined in [`pact-plugin/hooks/hooks.json`](pact-plugin/hooks/hooks.json): **19 commands across 11 events** (`SessionStart`, `PreCompact`, `UserPromptSubmit`, `PreToolUse`, `SubagentStart`, `SubagentStop`, `Stop`, `SessionEnd`, `TaskCompleted`, `TeammateIdle`, `PostToolUse`).
+
+The old v2 five-hook table is not current. Two mappings that table got wrong:
+- `phase_completion.py` runs on **Stop**
+- `validate_handoff.py` runs on **SubagentStop**
 
 ---
 
