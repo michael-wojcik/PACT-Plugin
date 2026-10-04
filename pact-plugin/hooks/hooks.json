@@ -93,7 +93,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/stop_audit.sh\""
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/stop_audit.py\""
           },
           {
             "type": "command",
