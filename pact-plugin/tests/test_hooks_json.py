@@ -45,7 +45,6 @@ MUST_BE_SYNC = {
     "handoff_gate.py",    # Blocks task completion without metadata
     "peer_inject.py",     # Injects peer context on agent start
     "git_commit_check.py",  # Checks git commit conventions
-    "track_files.py",     # Tracks file edits (PostToolUse, non-async)
 }
 
 # Hooks that SHOULD be async (non-blocking, fire-and-forget)
@@ -224,14 +223,13 @@ class TestNewSDKOptimizationEntries:
                         "file_size_check.py should be async:true"
                     )
 
-    def test_track_files_is_sync(self, hooks_config):
-        """track_files.py PostToolUse hook should be synchronous (not async)."""
-        entries = hooks_config["hooks"].get("PostToolUse", [])
-        for entry in entries:
-            for hook in entry.get("hooks", []):
-                if "track_files.py" in hook.get("command", ""):
-                    assert hook.get("async", False) is not True, (
-                        "track_files.py should be synchronous"
+    def test_track_files_is_not_registered(self, hooks_config):
+        """Write-only session file tracking is not a registered hook."""
+        for event_type, entries in hooks_config["hooks"].items():
+            for entry in entries:
+                for hook in entry.get("hooks", []):
+                    assert "track_files.py" not in hook.get("command", ""), (
+                        f"track_files.py must not be registered under {event_type}"
                     )
 
 

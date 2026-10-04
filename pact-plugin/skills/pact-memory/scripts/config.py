@@ -26,9 +26,6 @@ MODELS_DIR = PACT_MEMORY_DIR / "models"
 DEFAULT_MODEL_NAME = "all-MiniLM-L6-v2-Q8_0.gguf"
 DEFAULT_MODEL_PATH = MODELS_DIR / DEFAULT_MODEL_NAME
 
-# Session tracking directory
-SESSION_TRACKING_DIR = PACT_MEMORY_DIR / "session-tracking"
-
 # Model download URL
 MODEL_URL = (
     "https://huggingface.co/second-state/All-MiniLM-L6-v2-Embedding-GGUF/"
