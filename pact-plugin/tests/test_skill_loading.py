@@ -1,6 +1,4 @@
 """
-/Users/mj/Sites/collab/PACT-prompt/pact-plugin/skills/pact-agent-teams/test_skill_loading.py
-
 Tests for verifying the pact-agent-teams skill file structure and content.
 Ensures SKILL.md exists, has valid YAML frontmatter, and includes key sections
 for the Agent Teams execution model.
@@ -11,7 +9,7 @@ from pathlib import Path
 import yaml
 
 
-SKILL_DIR = Path(__file__).parent
+SKILL_DIR = Path(__file__).parent.parent / "skills" / "pact-agent-teams"
 SKILL_FILE = SKILL_DIR / "SKILL.md"
 
 
