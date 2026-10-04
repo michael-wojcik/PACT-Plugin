@@ -334,7 +334,6 @@ PACT uses the **Viable System Model** for intelligent coordination:
 | `session_init.py` | Session start | Load active plans, check memory |
 | `phase_completion.py` | Agent completes | Remind about decision logs |
 | `validate_handoff.py` | Agent handoff | Verify output quality |
-| `track_files.py` | File edit/write | Track files for memory graph |
 | `memory_prompt.py` | Session end | Prompt to save learnings |
 
 ---

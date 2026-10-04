@@ -18,7 +18,6 @@ The PACT Memory skill provides:
 - **Rich Memory Objects**: Store context, goals, tasks, lessons, decisions, and entities
 - **Semantic Search**: Find relevant memories using natural language queries
 - **Graph-Enhanced Retrieval**: Memories linked to files are boosted when working on related files
-- **Session Tracking**: Automatic file tracking and session context
 - **Cross-Session Learning**: Memories persist across sessions for cumulative knowledge
 
 ## Quick Start

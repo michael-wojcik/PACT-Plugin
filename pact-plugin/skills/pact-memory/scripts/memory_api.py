@@ -11,7 +11,6 @@ with the memory system.
 
 Used by:
 - SKILL.md: Documents API usage for skill invocation
-- Hooks: memory_prompt.py for file tracking
 - Agents: Direct memory operations during PACT phases
 
 Note: Memory initialization is lazy-loaded on first use via memory_init.py,
@@ -106,7 +105,7 @@ class PACTMemory:
     High-level interface for PACT Memory operations.
 
     Provides a clean API for saving, searching, and managing memories
-    with automatic project/session detection and file tracking.
+    with automatic project/session detection.
 
     Usage:
         memory = PACTMemory()
@@ -146,7 +145,7 @@ class PACTMemory:
         self._session_id = session_id or self._detect_session_id()
         self._db_path = db_path
 
-        # Session file tracking (populated by hooks)
+        # Session file tracking (explicit track_file() callers only)
         self._session_files: List[str] = []
 
         logger.debug(
@@ -226,8 +225,8 @@ class PACTMemory:
         """
         Track a file modified in this session.
 
-        Called by file tracking hooks to accumulate files
-        that will be linked to saved memories.
+        Accumulate files that will be linked to saved memories
+        when include_tracked is true on save().
 
         Args:
             path: File path that was modified.
